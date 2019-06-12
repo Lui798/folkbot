@@ -7,4 +7,4 @@ build
 *.ms
 .idea
 .gradle
-
+*.conf

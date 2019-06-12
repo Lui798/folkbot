@@ -24,8 +24,21 @@ public class Config {
         return (String)prop.get("prefix");
     }
 
+    public String getClient() {
+        return (String)prop.get("client");
+    }
+
+    public String getUser() {
+        return (String)prop.get("user");
+    }
+
+    public String getLiveChannel() {
+        return (String)prop.get("liveChannel");
+    }
+
     public void setLiveChannel(String liveChannel) {
         prop.setProperty("liveChannel", liveChannel);
+        saveValues();
     }
 
     private void noFile() {
@@ -41,7 +54,7 @@ public class Config {
             try {
                 System.in.read();
             } catch (IOException eIO) {
-                System.out.println(eIO);
+                eIO.printStackTrace();
             }
 
             System.exit(0);
@@ -59,7 +72,7 @@ public class Config {
             try {
                 System.in.read();
             } catch (IOException eIO) {
-                System.out.println(eIO);
+                eIO.printStackTrace();
             }
 
             System.exit(0);
@@ -67,8 +80,10 @@ public class Config {
     }
 
     private void setDefaultValues() {
-        prop.setProperty("token", "000000000000000000000000.000000.000000000000000000000000000");
+        prop.setProperty("token", "bot-token-here");
         prop.setProperty("prefix", "?");
+        prop.setProperty("user", "twitch-username");
+        prop.setProperty("client", "twitch-client-id");
         saveValues();
     }
 
@@ -81,7 +96,7 @@ public class Config {
                 prop.store(f, null);
                 f.close();
             } catch (IOException e) {
-                System.out.println(e);
+                e.printStackTrace();
             }
         } catch (FileNotFoundException e) {
             noFile();
@@ -97,7 +112,7 @@ public class Config {
                 prop.load(f);
                 f.close();
             } catch (IOException e) {
-                System.out.println(e);
+                e.printStackTrace();
             }
         } catch (FileNotFoundException e) {
             noFile();
