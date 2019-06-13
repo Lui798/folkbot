@@ -89,7 +89,7 @@ public class Config {
         prop.setProperty("prefix", "?");
         prop.setProperty("user", "twitch-username");
         prop.setProperty("client", "twitch-client-id");
-        prop.setProperty("liveChanel", "live-channel-id");
+        prop.setProperty("liveChannel", "live-channel-id");
         saveValues();
     }
 
