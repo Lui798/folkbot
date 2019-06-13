@@ -1,6 +1,8 @@
 package lui798.tdbot;
 
 import com.google.gson.JsonElement;
+import lui798.tdbot.command.Command;
+import lui798.tdbot.command.RunnableC;
 import lui798.tdbot.util.EncodingUtil;
 import lui798.tdbot.util.TwitchJSON;
 import net.dv8tion.jda.core.*;
@@ -44,24 +46,12 @@ public class Bot extends ListenerAdapter {
 
         builder.setToken(config.getToken());
 
-        if (args.length > 0) {
-            new Bot(builder, args[0]);
-        }
-        else {
-            new Bot(builder);
-        }
+        new Bot(builder);
     }
 
     public static void setJson() {
         CLIENT_ID = config.getClient();
         USER_ID = config.getUser();
-        json = new TwitchJSON(API_URL + "streams/" + USER_ID + "?client_id=" + CLIENT_ID);
-        channel = new TwitchJSON(API_URL + "channels/" + USER_ID + "?client_id=" + CLIENT_ID);
-    }
-
-    public static void setJson(String user) {
-        CLIENT_ID = config.getClient();
-        USER_ID = user;
         json = new TwitchJSON(API_URL + "streams/" + USER_ID + "?client_id=" + CLIENT_ID);
         channel = new TwitchJSON(API_URL + "channels/" + USER_ID + "?client_id=" + CLIENT_ID);
     }
@@ -81,38 +71,27 @@ public class Bot extends ListenerAdapter {
         }, 5000, 20000);
     }
 
-    public Bot(JDABuilder builder, String user) {
-        this.jda = build(builder);
-        jda.addEventListener(this);
-
-        setJson(user);
-
-        Timer timer = new Timer();
-        timer.schedule(new TimerTask() {
-            @Override
-            public void run() {
-                liveMain();
-            }
-        }, 20000, 20000);
-    }
-
-    public String getStatus() {
-        if (!json.getStream().isJsonNull()) {
-            JsonElement channel = json.getElement(json.getStream(), "channel");
-            JsonElement status = json.getElement(channel, "status");
-
-            return status.getAsString();
+    public JDA build(JDABuilder builder) {
+        try {
+            return builder.build();
         }
-        else return null;
+        catch (LoginException e) {
+            System.out.println("Failed to login, check your token\nPress enter to exit");
+            try {
+                System.in.read();
+            } catch (IOException eIO) {
+                eIO.printStackTrace();
+            }
+            System.exit(0);
+        }
+        return null;
     }
+
+
 
     public boolean checkIfLive() {
         json.updateJson();
-
-        if (getStatus() != null) {
-            return true;
-        }
-        return false;
+        return !json.getStream().isJsonNull();
     }
 
     public MessageEmbed liveEmbed() {
@@ -212,67 +191,6 @@ public class Bot extends ListenerAdapter {
 
 
 
-    public void clear(TextChannel channel, String message) {
-        int n;
-
-        try {
-            n = Integer.valueOf(message.substring(message.indexOf(" ")+1));
-        }
-        catch (NumberFormatException e) {
-            channel.sendMessage(responseEmbed("Wrong input!",
-                    "Please type in a valid integer. **" + prefix + "clear 0**")).queue();
-            return;
-        }
-
-        OffsetDateTime twoWeeksAgo = OffsetDateTime.now().minus(2, ChronoUnit.WEEKS);
-
-        new Thread(() -> {
-            List<Message> messages = channel.getHistory().retrievePast(n+1).complete();
-            messages.removeIf(m -> m.getCreationTime().isBefore(twoWeeksAgo));
-            messages.removeIf(m -> m.equals(currentMessage));
-
-            if (messages.isEmpty()) {
-                System.out.println("Done deleting: " + channel);
-                return;
-            }
-
-            messages.forEach(m -> System.out.println("Deleting: " + m));
-            channel.deleteMessages(messages).complete();
-        }).run();
-    }
-
-    public void user(TextChannel channel, String message) {
-        String n = message.substring(message.indexOf(" ")+1);
-
-        config.setUser(n.trim());
-        setJson();
-        channel.sendMessage(responseEmbed("Successfully set!",
-                "User is now set to: " + n.trim())).queue();
-    }
-
-    public void live(TextChannel channel) {
-        config.setLiveChannel(channel.getId());
-        channel.sendMessage(responseEmbed("Successfully set!",
-                "Live notifications will be sent to this channel: " + channel.getName())).queue();
-        System.out.println("Set live channel");
-    }
-
-    public JDA build(JDABuilder builder) {
-        try {
-            return builder.build();
-        }
-        catch (LoginException e) {
-            System.out.println("Failed to login, check your token\nPress enter to exit");
-            try {
-                System.in.read();
-            } catch (IOException eIO) {
-                eIO.printStackTrace();
-            }
-            System.exit(0);
-        }
-        return null;
-    }
-
     public MessageEmbed responseEmbed(String name, String value) {
         EmbedBuilder embed = new EmbedBuilder();
         embed.setColor(EMBED_COLOR);
@@ -283,23 +201,83 @@ public class Bot extends ListenerAdapter {
 
     @Override
     public void onMessageReceived(MessageReceivedEvent event) {
-        if (!event.getAuthor().isBot()) {
-            TextChannel channel = event.getTextChannel();
-            Message message = event.getMessage();
+        TextChannel channel = event.getTextChannel();
+        Message message = event.getMessage();
 
-            if (message.getContentRaw().equals(prefix + "live")
-                    && message.getMember().getPermissions(channel).contains(Permission.ADMINISTRATOR)) {
-                live(channel);
-            } else if (message.getContentRaw().length() >= 6
-                    ? message.getContentRaw().substring(0, 6).equals(prefix + "clear")
-                    : message.getContentRaw().equals(prefix + "clear")
-                    && message.getMember().getPermissions(channel).contains(Permission.MESSAGE_MANAGE)) {
-                clear(channel, message.getContentRaw());
-            } else if (message.getContentRaw().length() >= 5
-                    ? message.getContentRaw().substring(0, 5).equals(prefix + "user")
-                    : message.getContentRaw().equals(prefix + "user")
-                    && message.getMember().getPermissions(channel).contains(Permission.MESSAGE_MANAGE)) {
-                user(channel, message.getContentRaw());
+        Command live = new Command("live");
+        Command user = new Command("user");
+        Command clear = new Command("clear");
+
+        //------Live command------//
+        live.setCom(new RunnableC() {
+            @Override
+            public void run(String argument) {
+                config.setProp("liveChannel", argument);
+                channel.sendMessage(responseEmbed("Successfully set!",
+                        "Live notifications will be sent to: **" + argument + "**")).queue();
+                System.out.println("Set live channel");
+            }
+            @Override
+            public void run() {
+                run(channel.getId());
+            }
+        });
+        //------User command------//
+        user.setCom(new RunnableC() {
+            @Override
+            public void run(String argument) {
+                config.setProp("user", argument);
+                setJson();
+                channel.sendMessage(responseEmbed("Successfully set!",
+                        "User is now set to: **" + argument + "**")).queue();
+            }
+            @Override
+            public void run() {
+                channel.sendMessage(responseEmbed("Wrong input!",
+                        "Please type a username. **" + prefix + user.getName() + "** ***name***")).queue();
+            }
+        });
+        //------Clear command------//
+        clear.setCom(new RunnableC() {
+            @Override
+            public void run(String argument) {
+                int n;
+
+                try { n = Integer.valueOf(argument); }
+                catch (NumberFormatException e) {
+                    channel.sendMessage(responseEmbed("Wrong input!",
+                            "Please type a valid integer. **" + prefix + clear.getName() + "** ***0***")).queue();
+                    return;
+                }
+
+                OffsetDateTime twoWeeksAgo = OffsetDateTime.now().minus(2, ChronoUnit.WEEKS);
+
+                List<Message> messages = channel.getHistory().retrievePast(n+1).complete();
+                messages.removeIf(m -> m.getCreationTime().isBefore(twoWeeksAgo));
+                messages.removeIf(m -> m.equals(currentMessage));
+
+                if (messages.isEmpty()) return;
+
+                channel.deleteMessages(messages).complete();
+                messages.forEach(m -> System.out.println("Deleted: " + m));
+            }
+
+            @Override
+            public void run() {
+                channel.sendMessage(responseEmbed("Wrong input!",
+                        "Please type a valid integer. **" + prefix + clear.getName() + "** ***0***")).queue();
+            }
+        });
+
+        if (!event.getAuthor().isBot() && message.getMember().getPermissions(channel).contains(Permission.ADMINISTRATOR)) {
+            String m = message.getContentRaw();
+
+            if (live.equalsInput(m))
+                live.run(m);
+            else if (user.equalsInput(m))
+                user.run(m);
+            else if (clear.equalsInput(m)) {
+                clear.run(m);
             }
         }
     }

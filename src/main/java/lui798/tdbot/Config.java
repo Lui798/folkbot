@@ -32,17 +32,12 @@ public class Config {
         return (String)prop.get("user");
     }
 
-    public void setUser(String user) {
-        prop.setProperty("user", user);
-        saveValues();
-    }
-
     public String getLiveChannel() {
         return (String)prop.get("liveChannel");
     }
 
-    public void setLiveChannel(String liveChannel) {
-        prop.setProperty("liveChannel", liveChannel);
+    public void setProp(String key, String value) {
+        prop.setProperty(key, value);
         saveValues();
     }
 
