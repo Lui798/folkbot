@@ -1,11 +1,19 @@
 plugins {
     id 'java'
+    id "com.github.johnrengelman.shadow" version "4.0.2"
 }
 
 group 'lui798'
 version '1.0-SNAPSHOT'
 
 sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+jar {
+    manifest {
+        attributes 'Main-Class': 'lui798.tdbot.Bot'
+    }
+}
 
 repositories {
     mavenCentral()

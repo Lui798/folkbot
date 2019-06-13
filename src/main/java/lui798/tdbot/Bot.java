@@ -93,7 +93,7 @@ public class Bot extends ListenerAdapter {
             public void run() {
                 liveMain();
             }
-        }, 5000, 20000);
+        }, 20000, 20000);
     }
 
     public String getStatus() {
