@@ -32,6 +32,11 @@ public class Config {
         return (String)prop.get("user");
     }
 
+    public void setUser(String user) {
+        prop.setProperty("user", user);
+        saveValues();
+    }
+
     public String getLiveChannel() {
         return (String)prop.get("liveChannel");
     }
@@ -84,6 +89,7 @@ public class Config {
         prop.setProperty("prefix", "?");
         prop.setProperty("user", "twitch-username");
         prop.setProperty("client", "twitch-client-id");
+        prop.setProperty("liveChanel", "live-channel-id");
         saveValues();
     }
 

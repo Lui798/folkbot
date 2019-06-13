@@ -1,9 +1,7 @@
 package lui798.tdbot.util;
 
-import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
-import org.json.*;
 
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -38,8 +36,12 @@ public class TwitchJSON {
         }
     }
 
-    public JsonElement getElement(JsonElement parent, String name) {
+    public static JsonElement getElement(JsonElement parent, String name) {
         return parent.getAsJsonObject().get(name);
+    }
+
+    public static String getString(JsonElement parent, String name) {
+        return getElement(parent, name).getAsString();
     }
 
     public JsonElement getStream() {
