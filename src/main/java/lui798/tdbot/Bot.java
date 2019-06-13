@@ -61,14 +61,6 @@ public class Bot extends ListenerAdapter {
         jda.addEventListener(this);
 
         setJson();
-
-        Timer timer = new Timer();
-        timer.schedule(new TimerTask() {
-            @Override
-            public void run() {
-                liveMain();
-            }
-        }, 5000, 20000);
     }
 
     public JDA build(JDABuilder builder) {
@@ -212,10 +204,21 @@ public class Bot extends ListenerAdapter {
         live.setCom(new RunnableC() {
             @Override
             public void run(String argument) {
-                config.setProp("liveChannel", argument);
-                channel.sendMessage(responseEmbed("Successfully set!",
-                        "Live notifications will be sent to: **" + argument + "**")).queue();
-                System.out.println("Set live channel");
+                if (argument.equals("start")) {
+                    message.delete();
+                    Timer timer = new Timer();
+                    timer.schedule(new TimerTask() {
+                        @Override
+                        public void run() {
+                            liveMain();
+                        }
+                    }, 0, 30000);
+                } else {
+                    config.setProp("liveChannel", argument);
+                    channel.sendMessage(responseEmbed("Successfully set!",
+                            "Live notifications will be sent to: **" + argument + "**")).queue();
+                    System.out.println("Set live channel");
+                }
             }
             @Override
             public void run() {
