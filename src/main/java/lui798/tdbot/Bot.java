@@ -246,6 +246,9 @@ public class Bot extends ListenerAdapter {
         return embed.build();
     }
 
+    private Timer timer = new Timer();
+    private boolean timerStarted = false;
+
     @Override
     public void onMessageReceived(MessageReceivedEvent event) {
         TextChannel channel = event.getTextChannel();
@@ -262,13 +265,15 @@ public class Bot extends ListenerAdapter {
             public void run(String argument) {
                 if (argument.equals("start")) {
                     message.delete().queue();
-                    Timer timer = new Timer();
-                    timer.schedule(new TimerTask() {
-                        @Override
-                        public void run() {
-                            liveMain();
-                        }
-                    }, 0, 30000);
+                    if (!timerStarted) {
+                        timer.schedule(new TimerTask() {
+                            @Override
+                            public void run() {
+                                liveMain();
+                                timerStarted = true;
+                            }
+                        }, 0, 30000);
+                    }
                 } else {
                     config.setProp("liveChannel", argument);
                     channel.sendMessage(responseEmbed("Successfully set!",
@@ -287,14 +292,15 @@ public class Bot extends ListenerAdapter {
             public void run(String argument) {
                 if (argument.equals("start")) {
                     message.delete().queue();
-                    new Thread(() -> {
-                        try {
-                            irc.startBot();
-                        }
-                        catch (IrcException | IOException e) {
-                            e.printStackTrace();
-                        }
-                    }).start();
+                    if (!irc.isConnected()) {
+                        new Thread(() -> {
+                            try {
+                                irc.startBot();
+                            } catch (IrcException | IOException e) {
+                                e.printStackTrace();
+                            }
+                        }).start();
+                    }
                 } else {
                     config.setProp("chatChannel", argument);
                     channel.sendMessage(responseEmbed("Successfully set!",
