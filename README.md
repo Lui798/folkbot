@@ -1,4 +1,4 @@
-# twitch-discord-bot
+# folkbot
 A simple discord bot that aims to link twitch chat with discord and provide Discord rich embed live notifications.
 ## Getting Stated
 ### Prerequisites
