@@ -14,9 +14,12 @@ import net.dv8tion.jda.core.hooks.ListenerAdapter;
 
 import javax.security.auth.login.LoginException;
 import java.io.IOException;
+import java.time.Duration;
+import java.util.Date;
 import java.text.NumberFormat;
 import java.time.Instant;
 import java.time.OffsetDateTime;
+import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Timer;
@@ -90,6 +93,8 @@ public class Bot extends ListenerAdapter {
         JsonElement channel = TwitchJSON.getElement(json.getStream(), "channel");
         JsonElement preview = TwitchJSON.getElement(TwitchJSON.getElement(json.getStream(), "preview"), "template");
 
+        Duration date = Duration.between(Instant.from(OffsetDateTime.parse("2019-06-13T20:41:28Z", DateTimeFormatter.ISO_DATE_TIME)), Instant.now());
+
         EmbedBuilder embed = new EmbedBuilder();
         embed.setColor(EMBED_COLOR);
         embed.setAuthor(TwitchJSON.getString(channel, "display_name"), null,
@@ -107,7 +112,8 @@ public class Bot extends ListenerAdapter {
                     + gameUrl + ")", false);
         }
         embed.setTimestamp(Instant.now());
-        embed.setFooter(numberFormat.format(Integer.parseInt(TwitchJSON.getString(json.getStream(), "viewers"))) + " Viewers", null);
+        embed.setFooter(numberFormat.format(Integer.parseInt(TwitchJSON.getString(json.getStream(), "viewers")))
+                + " Viewers | " + date.toHours() + "h" + date.toMinutes()%60 + "m Uptime", null);
 
         return embed.build();
     }
@@ -205,7 +211,7 @@ public class Bot extends ListenerAdapter {
             @Override
             public void run(String argument) {
                 if (argument.equals("start")) {
-                    message.delete();
+                    message.delete().queue();
                     Timer timer = new Timer();
                     timer.schedule(new TimerTask() {
                         @Override
