@@ -10,6 +10,7 @@ import net.dv8tion.jda.core.*;
 import net.dv8tion.jda.core.entities.Message;
 import net.dv8tion.jda.core.entities.MessageEmbed;
 import net.dv8tion.jda.core.entities.TextChannel;
+import net.dv8tion.jda.core.entities.Webhook;
 import net.dv8tion.jda.core.events.ReadyEvent;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.core.hooks.ListenerAdapter;
@@ -95,11 +96,22 @@ public class Bot extends ListenerAdapter {
 
     @Override
     public void onReady(ReadyEvent event) {
-        webhook = jda.getTextChannelById(config.getProp("chatChannel"))
-                .createWebhook(jda.getSelfUser().getName())
-                .complete()
-                .newClient()
-                .build();
+        TextChannel chatChannel = jda.getTextChannelById(config.getProp("chatChannel"));
+
+        boolean existingWebhook = false;
+        for (Webhook hook : chatChannel.getWebhooks().complete()) {
+            if (hook.getName().equals(jda.getSelfUser().getName())) {
+                webhook = hook.newClient().build();
+                existingWebhook = true;
+            }
+        }
+        if (!existingWebhook) {
+            webhook = chatChannel
+                    .createWebhook(jda.getSelfUser().getName())
+                    .complete()
+                    .newClient()
+                    .build();
+        }
 
         ircBot = new IRCBot();
         Configuration ircConfig = new Configuration.Builder()
