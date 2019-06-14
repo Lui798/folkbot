@@ -126,6 +126,9 @@ public class Bot extends ListenerAdapter {
     }
 
 
+    /*-----------------------------------
+    Live notifications
+    -----------------------------------*/
 
     public boolean checkIfLive() {
         json.updateJson();
@@ -231,6 +234,9 @@ public class Bot extends ListenerAdapter {
     }
 
 
+    /*-----------------------------------
+    Discord messages and commands
+    -----------------------------------*/
 
     public static MessageEmbed responseEmbed(String name, String value) {
         EmbedBuilder embed = new EmbedBuilder();
@@ -363,6 +369,11 @@ public class Bot extends ListenerAdapter {
                 ircBot.sendMessage(m, message.getAuthor().getName());
         }
     }
+
+
+    /*-----------------------------------
+    Twitch irc chatbot
+    -----------------------------------*/
 
     public static class IRCBot extends org.pircbotx.hooks.ListenerAdapter {
 
