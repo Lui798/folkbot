@@ -335,6 +335,12 @@ public class Bot extends ListenerAdapter {
                     return;
                 }
 
+                if (n < 2) {
+                    channel.sendMessage(responseEmbed("Wrong input!",
+                            "Please type a integer greater than 1. **" + prefix + clear.getName() + "** ***2***")).queue();
+                    return;
+                }
+
                 OffsetDateTime twoWeeksAgo = OffsetDateTime.now().minus(2, ChronoUnit.WEEKS);
 
                 List<Message> messages = channel.getHistory().retrievePast(n+1).complete();
