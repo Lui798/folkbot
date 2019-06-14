@@ -24,5 +24,8 @@ dependencies {
     compile ('net.dv8tion:JDA:3.8.3_463') {
         exclude module: 'opus-java'
     }
+    compile 'org.apache.commons:commons-lang3:3.9'
+    compile 'com.google.guava:guava:16.0+'
+    compile 'org.pircbotx:pircbotx:2.1'
     implementation 'com.google.code.gson:gson:2.8.5'
 }

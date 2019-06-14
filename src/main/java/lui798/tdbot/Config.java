@@ -17,23 +17,27 @@ public class Config {
     }
 
     public String getToken() {
-        return (String)prop.get("token");
+        return getProp("discordToken");
     }
 
     public String getPrefix() {
-        return (String)prop.get("prefix");
+        return getProp("prefix");
     }
 
     public String getClient() {
-        return (String)prop.get("client");
+        return getProp("twitchClientID");
     }
 
     public String getUser() {
-        return (String)prop.get("user");
+        return getProp("twitchUser");
     }
 
     public String getLiveChannel() {
-        return (String)prop.get("liveChannel");
+        return getProp("liveChannel");
+    }
+
+    public String getProp(String key) {
+        return prop.getProperty(key);
     }
 
     public void setProp(String key, String value) {
@@ -80,11 +84,14 @@ public class Config {
     }
 
     private void setDefaultValues() {
-        prop.setProperty("token", "bot-token-here");
         prop.setProperty("prefix", "?");
-        prop.setProperty("user", "twitch-username");
-        prop.setProperty("client", "twitch-client-id");
+        prop.setProperty("discordToken", "bot-token-here");
+        prop.setProperty("twitchUser", "twitch-username");
+        prop.setProperty("twitchClientID", "twitch-client-id");
         prop.setProperty("liveChannel", "live-channel-id");
+        prop.setProperty("chatChannel", "chat-channel-id");
+        prop.setProperty("ircUser", "twitch-chatbot-username");
+        prop.setProperty("ircOAuth", "oauth:password-here");
         saveValues();
     }
 

@@ -11,11 +11,14 @@ import net.dv8tion.jda.core.entities.MessageEmbed;
 import net.dv8tion.jda.core.entities.TextChannel;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.core.hooks.ListenerAdapter;
+import org.pircbotx.Configuration;
+import org.pircbotx.PircBotX;
+import org.pircbotx.hooks.events.PingEvent;
+import org.pircbotx.hooks.types.GenericMessageEvent;
 
 import javax.security.auth.login.LoginException;
 import java.io.IOException;
 import java.time.Duration;
-import java.util.Date;
 import java.text.NumberFormat;
 import java.time.Instant;
 import java.time.OffsetDateTime;
@@ -28,31 +31,45 @@ import java.util.TimerTask;
 public class Bot extends ListenerAdapter {
     private static Config config;
     private static String prefix;
-    private final JDA jda;
+    private static JDA jda;
+    private static PircBotX irc;
+    private static IRCBot ircBot;
     private static TwitchJSON json;
     private static TwitchJSON channel;
 
+    private NumberFormat numberFormat = NumberFormat.getInstance();
+    private Message currentMessage = null;
+    private int maxViewers = 0;
+
+    //Live notification settings
     private static final int EMBED_COLOR = 6570404;
     private static final int VOD_COLOR = 16070455;
     private static final String API_URL = "https://api.twitch.tv/kraken/";
     private static String USER_ID;
     private static String CLIENT_ID;
 
-    private NumberFormat numberFormat = NumberFormat.getInstance();
-    private Message currentMessage = null;
-    private int maxViewers = 0;
-
-    public static void main(String[] args) {
+    public static void main(String[] args) throws Exception {
         config = new Config();
         prefix = config.getPrefix();
         JDABuilder builder = new JDABuilder(AccountType.BOT);
 
         builder.setToken(config.getToken());
-
         new Bot(builder);
+
+        ircBot = new IRCBot();
+        Configuration ircConfig = new Configuration.Builder()
+                .setName(config.getProp("ircUser"))
+                .setServer("irc.chat.twitch.tv", 6667)
+                .setServerPassword(config.getProp("ircOAuth"))
+                .addListener(ircBot)
+                .addAutoJoinChannel("#" + config.getUser())
+                .buildConfiguration();
+
+        irc = new PircBotX(ircConfig);
+        irc.startBot();
     }
 
-    public static void setJson() {
+    public void setJson() {
         CLIENT_ID = config.getClient();
         USER_ID = config.getUser();
         json = new TwitchJSON(API_URL + "streams/" + USER_ID + "?client_id=" + CLIENT_ID);
@@ -60,7 +77,7 @@ public class Bot extends ListenerAdapter {
     }
 
     public Bot(JDABuilder builder) {
-        this.jda = build(builder);
+        jda = build(builder);
         jda.addEventListener(this);
 
         setJson();
@@ -189,7 +206,7 @@ public class Bot extends ListenerAdapter {
 
 
 
-    public MessageEmbed responseEmbed(String name, String value) {
+    public static MessageEmbed responseEmbed(String name, String value) {
         EmbedBuilder embed = new EmbedBuilder();
         embed.setColor(EMBED_COLOR);
         embed.addField(name, value, false);
@@ -278,16 +295,45 @@ public class Bot extends ListenerAdapter {
             }
         });
 
-        if (!event.getAuthor().isBot() && message.getMember().getPermissions(channel).contains(Permission.ADMINISTRATOR)) {
+        if (!event.getAuthor().isBot()) {
             String m = message.getContentRaw();
 
-            if (live.equalsInput(m))
+            if (live.equalsInput(m) && message.getMember().getPermissions(channel).contains(Permission.ADMINISTRATOR))
                 live.run(m);
-            else if (user.equalsInput(m))
+            else if (user.equalsInput(m) && message.getMember().getPermissions(channel).contains(Permission.ADMINISTRATOR))
                 user.run(m);
-            else if (clear.equalsInput(m)) {
+            else if (clear.equalsInput(m) && message.getMember().getPermissions(channel).contains(Permission.ADMINISTRATOR))
                 clear.run(m);
-            }
+            else
+                ircBot.sendMessage(m, message.getAuthor().getName());
+        }
+    }
+
+    public static class IRCBot extends org.pircbotx.hooks.ListenerAdapter {
+
+        /**
+         * PircBotx will return the exact message sent and not the raw line
+         */
+        @Override
+        public void onGenericMessage(GenericMessageEvent event) {
+            String message = event.getMessage();
+            String name = event.getUser().getNick();
+
+            TextChannel channel = jda.getTextChannelById(config.getProp("chatChannel"));
+
+            channel.sendMessage("**[" + name + "]:** " + message).queue();
+        }
+
+        /**
+         * We MUST respond to this or else we will get kicked
+         */
+        @Override
+        public void onPing(PingEvent event) throws Exception {
+            irc.sendRaw().rawLineNow(String.format("PONG %s\r\n", event.getPingValue()));
+        }
+
+        private void sendMessage(String message, String nick) {
+            irc.sendIRC().message("#" + config.getUser(), "[" + nick + "]: " + message);
         }
     }
 }
