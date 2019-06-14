@@ -1,4 +1,4 @@
-package lui798.tdbot.util;
+package lui798.folkbot.util;
 
 import com.google.gson.JsonElement;
 

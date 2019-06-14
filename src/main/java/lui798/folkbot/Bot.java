@@ -1,11 +1,11 @@
-package lui798.tdbot;
+package lui798.folkbot;
 
 import com.google.gson.JsonElement;
-import lui798.tdbot.command.Command;
-import lui798.tdbot.command.RunnableC;
-import lui798.tdbot.util.CustomJSON;
-import lui798.tdbot.util.EncodingUtil;
-import lui798.tdbot.util.TwitchJSON;
+import lui798.folkbot.command.Command;
+import lui798.folkbot.command.RunnableC;
+import lui798.folkbot.util.CustomJSON;
+import lui798.folkbot.util.EncodingUtil;
+import lui798.folkbot.util.TwitchJSON;
 import net.dv8tion.jda.core.*;
 import net.dv8tion.jda.core.entities.Message;
 import net.dv8tion.jda.core.entities.MessageEmbed;

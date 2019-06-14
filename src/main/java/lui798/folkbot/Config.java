@@ -1,10 +1,10 @@
-package lui798.tdbot;
+package lui798.folkbot;
 
 import java.io.*;
 import java.util.Properties;
 
 public class Config {
-    private final String FILE_NAME = "tdbot.conf";
+    private final String FILE_NAME = "folkbot.conf";
     private File file;
     private Properties prop;
 

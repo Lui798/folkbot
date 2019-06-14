@@ -1,4 +1,4 @@
-package lui798.tdbot.command;
+package lui798.folkbot.command;
 
 public class Command {
 

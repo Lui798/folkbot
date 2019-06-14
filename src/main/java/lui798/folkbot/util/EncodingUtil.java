@@ -1,4 +1,4 @@
-package lui798.tdbot.util;
+package lui798.folkbot.util;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
