@@ -3,16 +3,21 @@ package lui798.tdbot;
 import com.google.gson.JsonElement;
 import lui798.tdbot.command.Command;
 import lui798.tdbot.command.RunnableC;
+import lui798.tdbot.util.CustomJSON;
 import lui798.tdbot.util.EncodingUtil;
 import lui798.tdbot.util.TwitchJSON;
 import net.dv8tion.jda.core.*;
 import net.dv8tion.jda.core.entities.Message;
 import net.dv8tion.jda.core.entities.MessageEmbed;
 import net.dv8tion.jda.core.entities.TextChannel;
+import net.dv8tion.jda.core.events.ReadyEvent;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.core.hooks.ListenerAdapter;
+import net.dv8tion.jda.webhook.WebhookClient;
+import net.dv8tion.jda.webhook.WebhookMessageBuilder;
 import org.pircbotx.Configuration;
 import org.pircbotx.PircBotX;
+import org.pircbotx.exception.IrcException;
 import org.pircbotx.hooks.events.PingEvent;
 import org.pircbotx.hooks.types.GenericMessageEvent;
 
@@ -32,6 +37,7 @@ public class Bot extends ListenerAdapter {
     private static Config config;
     private static String prefix;
     private static JDA jda;
+    private static WebhookClient webhook;
     private static PircBotX irc;
     private static IRCBot ircBot;
     private static TwitchJSON json;
@@ -55,18 +61,6 @@ public class Bot extends ListenerAdapter {
 
         builder.setToken(config.getToken());
         new Bot(builder);
-
-        ircBot = new IRCBot();
-        Configuration ircConfig = new Configuration.Builder()
-                .setName(config.getProp("ircUser"))
-                .setServer("irc.chat.twitch.tv", 6667)
-                .setServerPassword(config.getProp("ircOAuth"))
-                .addListener(ircBot)
-                .addAutoJoinChannel("#" + config.getUser())
-                .buildConfiguration();
-
-        irc = new PircBotX(ircConfig);
-        irc.startBot();
     }
 
     public void setJson() {
@@ -97,6 +91,26 @@ public class Bot extends ListenerAdapter {
             System.exit(0);
         }
         return null;
+    }
+
+    @Override
+    public void onReady(ReadyEvent event) {
+        webhook = jda.getTextChannelById(config.getProp("chatChannel"))
+                .createWebhook(jda.getSelfUser().getName())
+                .complete()
+                .newClient()
+                .build();
+
+        ircBot = new IRCBot();
+        Configuration ircConfig = new Configuration.Builder()
+                .setName(config.getProp("ircUser"))
+                .addServer("irc.chat.twitch.tv", 6667)
+                .setServerPassword(config.getProp("ircOAuth"))
+                .addListener(ircBot)
+                .addAutoJoinChannel("#" + config.getUser())
+                .buildConfiguration();
+
+        irc = new PircBotX(ircConfig);
     }
 
 
@@ -220,6 +234,7 @@ public class Bot extends ListenerAdapter {
         Message message = event.getMessage();
 
         Command live = new Command("live");
+        Command chat = new Command("chat");
         Command user = new Command("user");
         Command clear = new Command("clear");
 
@@ -248,11 +263,37 @@ public class Bot extends ListenerAdapter {
                 run(channel.getId());
             }
         });
+        //------Chat command------//
+        chat.setCom(new RunnableC() {
+            @Override
+            public void run(String argument) {
+                if (argument.equals("start")) {
+                    message.delete().queue();
+                    new Thread(() -> {
+                        try {
+                            irc.startBot();
+                        }
+                        catch (IrcException | IOException e) {
+                            e.printStackTrace();
+                        }
+                    }).start();
+                } else {
+                    config.setProp("chatChannel", argument);
+                    channel.sendMessage(responseEmbed("Successfully set!",
+                            "Twitch messages be sent to: **" + argument + "**")).queue();
+                    System.out.println("Set chat channel");
+                }
+            }
+            @Override
+            public void run() {
+                run(channel.getId());
+            }
+        });
         //------User command------//
         user.setCom(new RunnableC() {
             @Override
             public void run(String argument) {
-                config.setProp("user", argument);
+                config.setProp("twitchUser", argument);
                 setJson();
                 channel.sendMessage(responseEmbed("Successfully set!",
                         "User is now set to: **" + argument + "**")).queue();
@@ -300,39 +341,42 @@ public class Bot extends ListenerAdapter {
 
             if (live.equalsInput(m) && message.getMember().getPermissions(channel).contains(Permission.ADMINISTRATOR))
                 live.run(m);
+            else if (chat.equalsInput(m) && message.getMember().getPermissions(channel).contains(Permission.ADMINISTRATOR))
+                chat.run(m);
             else if (user.equalsInput(m) && message.getMember().getPermissions(channel).contains(Permission.ADMINISTRATOR))
                 user.run(m);
             else if (clear.equalsInput(m) && message.getMember().getPermissions(channel).contains(Permission.ADMINISTRATOR))
                 clear.run(m);
-            else
+            else if (irc.isConnected())
                 ircBot.sendMessage(m, message.getAuthor().getName());
         }
     }
 
     public static class IRCBot extends org.pircbotx.hooks.ListenerAdapter {
 
-        /**
-         * PircBotx will return the exact message sent and not the raw line
-         */
         @Override
         public void onGenericMessage(GenericMessageEvent event) {
             String message = event.getMessage();
             String name = event.getUser().getNick();
 
-            TextChannel channel = jda.getTextChannelById(config.getProp("chatChannel"));
+            CustomJSON twitchUser = new CustomJSON(API_URL + "channels/" + name + "?client_id=" + CLIENT_ID);
+            String avatarUrl = CustomJSON.getString(twitchUser.getRoot(), "logo");
 
-            channel.sendMessage("**[" + name + "]:** " + message).queue();
+            WebhookMessageBuilder builder = new WebhookMessageBuilder()
+                    .setUsername(name)
+                    .setAvatarUrl(avatarUrl)
+                    .setContent(message);
+
+            webhook.send(builder.build());
         }
 
-        /**
-         * We MUST respond to this or else we will get kicked
-         */
         @Override
-        public void onPing(PingEvent event) throws Exception {
+        public void onPing(PingEvent event) {
             irc.sendRaw().rawLineNow(String.format("PONG %s\r\n", event.getPingValue()));
         }
 
         private void sendMessage(String message, String nick) {
+            System.out.println("Sent message to IRC #" + config.getUser());
             irc.sendIRC().message("#" + config.getUser(), "[" + nick + "]: " + message);
         }
     }
