@@ -31,9 +31,7 @@ import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
-import java.util.List;
-import java.util.Timer;
-import java.util.TimerTask;
+import java.util.*;
 
 public class Bot extends ListenerAdapter {
     private static Config config;
@@ -275,7 +273,11 @@ public class Bot extends ListenerAdapter {
                             }
                         }, 0, 30000);
                     }
-                } else {
+                }
+                else if (argument.equals("stop") && timerStarted) {
+                    timer.cancel();
+                }
+                else {
                     config.setProp("liveChannel", argument);
                     channel.sendMessage(responseEmbed("Successfully set!",
                             "Live notifications will be sent to: **" + argument + "**")).queue();

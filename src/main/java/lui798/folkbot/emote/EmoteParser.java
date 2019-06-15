@@ -10,7 +10,7 @@ public class EmoteParser {
 
     public String twitchToDiscord(String message) {
         for (CustomEmote emote : emotes.getList()) {
-            message = message.replace(emote.getName(), ":" + emote.getName() + ":");
+            message = message.replaceAll("\\b" + emote.getName() + "\\b", ":" + emote.getName() + ":");
         }
 
         return message;

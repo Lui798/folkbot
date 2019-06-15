@@ -10,18 +10,23 @@ import java.util.List;
 
 public class TwitchEmotes {
     private String user;
+    private String clientID;
     private final String SIZE = "2";
 
     private CustomJSON frankerFaceZ;
     private CustomJSON betterTTV;
+    private CustomJSON twitchGlobal;
 
     private List<CustomEmote> ffzList = new ArrayList<>();
     private List<CustomEmote> bttvList = new ArrayList<>();
+    private List<CustomEmote> twitchList = new ArrayList<>();
 
     public TwitchEmotes(String user) {
         this.user = user;
+        this.clientID = clientID;
         this.frankerFaceZ = new CustomJSON("https://api.frankerfacez.com/v1/room/" + user);
         this.betterTTV = new CustomJSON("https://api.betterttv.net/2/channels/" + user);
+        this.twitchGlobal = new CustomJSON("https://api.twitch.tv/kraken/chat/emoticon_images?emotesets=0");
 
         makeEmoteLists();
     }
@@ -30,16 +35,9 @@ public class TwitchEmotes {
         List<CustomEmote> temp = new ArrayList<>();
         temp.addAll(ffzList);
         temp.addAll(bttvList);
+        temp.addAll(twitchList);
 
         return temp;
-    }
-
-    private List<CustomEmote> getBTTVList() {
-        return bttvList;
-    }
-
-    private List<CustomEmote> getFFZList() {
-        return ffzList;
     }
 
     private void makeEmoteLists() {
@@ -61,6 +59,14 @@ public class TwitchEmotes {
             String name = TwitchJSON.getString(bttvEmote, "code");
 
             bttvList.add(new CustomEmote(name, url));
+        }
+
+        JsonArray twitchArray = CustomJSON.getElement(CustomJSON.getElement(twitchGlobal.getRoot(), "emoticon_sets"), "0").getAsJsonArray();
+
+        for (JsonElement twitchEmote : twitchArray) {
+            String name = CustomJSON.getString(twitchEmote, "code");
+
+            twitchList.add(new CustomEmote(name, null));
         }
     }
 }
