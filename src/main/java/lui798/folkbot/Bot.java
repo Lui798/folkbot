@@ -294,6 +294,7 @@ public class Bot extends ListenerAdapter {
                 if (argument.equals("start")) {
                     message.delete().queue();
                     if (!irc.isConnected()) {
+                        onReady(null);
                         new Thread(() -> {
                             try {
                                 irc.startBot();
@@ -384,8 +385,8 @@ public class Bot extends ListenerAdapter {
                 user.run(m);
             else if (clear.equalsInput(m) && message.getMember().getPermissions(channel).contains(Permission.ADMINISTRATOR))
                 clear.run(m);
-            else if (irc.isConnected())
-                ircBot.sendMessage(parser.discordToTwitch(m), message.getAuthor().getName());
+//            else if (irc.isConnected())
+//                ircBot.sendMessage(parser.discordToTwitch(m), message.getAuthor().getName());
         }
     }
 
