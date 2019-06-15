@@ -276,6 +276,7 @@ public class Bot extends ListenerAdapter {
                 }
                 else if (argument.equals("stop") && timerStarted) {
                     timer.cancel();
+                    timerStarted = false;
                 }
                 else {
                     config.setProp("liveChannel", argument);
@@ -308,6 +309,9 @@ public class Bot extends ListenerAdapter {
                     }
                 } else if (argument.equals("stop")) {
                     irc.sendIRC().quitServer();
+                    webhook.close();
+                    channel.sendMessage(responseEmbed("Chatbot stopped",
+                            "Messages may continue to come through \nif chat was moving fast")).queue();
                     System.out.println("Chatbot stopped");
                 } else {
                     config.setProp("chatChannel", argument);
@@ -374,7 +378,7 @@ public class Bot extends ListenerAdapter {
             }
         });
 
-        EmoteParser parser = new EmoteParser(config.getUser());
+        //EmoteParser parser = new EmoteParser(config.getUser());
 
         if (!event.getAuthor().isBot()) {
             String m = message.getContentDisplay();
@@ -404,8 +408,8 @@ public class Bot extends ListenerAdapter {
             String message = event.getMessage();
             String name = event.getUser().getNick();
 
-            EmoteParser parser = new EmoteParser(config.getUser());
-            message = parser.twitchToDiscord(message);
+            //EmoteParser parser = new EmoteParser(config.getUser());
+            //message = parser.twitchToDiscord(message);
 
             CustomJSON twitchUser = new CustomJSON(API_URL + "channels/" + name + "?client_id=" + CLIENT_ID);
             String avatarUrl = CustomJSON.getString(twitchUser.getRoot(), "logo");
