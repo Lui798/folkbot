@@ -3,6 +3,7 @@ package lui798.folkbot;
 import com.google.gson.JsonElement;
 import lui798.folkbot.command.Command;
 import lui798.folkbot.command.RunnableC;
+import lui798.folkbot.emote.EmoteParser;
 import lui798.folkbot.util.CustomJSON;
 import lui798.folkbot.util.EncodingUtil;
 import lui798.folkbot.util.TwitchJSON;
@@ -55,7 +56,7 @@ public class Bot extends ListenerAdapter {
     private static String USER_ID;
     private static String CLIENT_ID;
 
-    public static void main(String[] args) throws Exception {
+    public static void main(String[] args) {
         config = new Config();
         prefix = config.getPrefix();
         JDABuilder builder = new JDABuilder(AccountType.BOT);
@@ -300,7 +301,11 @@ public class Bot extends ListenerAdapter {
                                 e.printStackTrace();
                             }
                         }).start();
+                        System.out.println("Chatbot started");
                     }
+                } else if (argument.equals("stop")) {
+                    irc.sendIRC().quitServer();
+                    System.out.println("Chatbot stopped");
                 } else {
                     config.setProp("chatChannel", argument);
                     channel.sendMessage(responseEmbed("Successfully set!",
@@ -366,8 +371,10 @@ public class Bot extends ListenerAdapter {
             }
         });
 
+        EmoteParser parser = new EmoteParser(config.getUser());
+
         if (!event.getAuthor().isBot()) {
-            String m = message.getContentRaw();
+            String m = message.getContentDisplay();
 
             if (live.equalsInput(m) && message.getMember().getPermissions(channel).contains(Permission.ADMINISTRATOR))
                 live.run(m);
@@ -378,7 +385,7 @@ public class Bot extends ListenerAdapter {
             else if (clear.equalsInput(m) && message.getMember().getPermissions(channel).contains(Permission.ADMINISTRATOR))
                 clear.run(m);
             else if (irc.isConnected())
-                ircBot.sendMessage(m, message.getAuthor().getName());
+                ircBot.sendMessage(parser.discordToTwitch(m), message.getAuthor().getName());
         }
     }
 
@@ -393,6 +400,9 @@ public class Bot extends ListenerAdapter {
         public void onGenericMessage(GenericMessageEvent event) {
             String message = event.getMessage();
             String name = event.getUser().getNick();
+
+            EmoteParser parser = new EmoteParser(config.getUser());
+            message = parser.twitchToDiscord(message);
 
             CustomJSON twitchUser = new CustomJSON(API_URL + "channels/" + name + "?client_id=" + CLIENT_ID);
             String avatarUrl = CustomJSON.getString(twitchUser.getRoot(), "logo");
@@ -411,8 +421,8 @@ public class Bot extends ListenerAdapter {
         }
 
         private void sendMessage(String message, String nick) {
-            System.out.println("Sent message to IRC #" + config.getUser());
             irc.sendIRC().message("#" + config.getUser(), "[" + nick + "]: " + message);
+            System.out.println("Sent message to IRC #" + config.getUser());
         }
     }
 }
