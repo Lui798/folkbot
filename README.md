@@ -23,5 +23,9 @@ You can optionally run it on another twitch user via commandline.
 ```
 java -jar tdbot-1.0-SNAPSHOT-all.jar {user}
 ```
+### Building
+Output jar is found in build/libs.
+#### Windows
+`gradlew.bat shadowJar`
 ### Latest Release
 You can grab the latest version [here](https://github.com/Lui798/twitch-discord-bot/releases/latest)
