@@ -3,7 +3,6 @@ package lui798.folkbot;
 import com.google.gson.JsonElement;
 import lui798.folkbot.command.Command;
 import lui798.folkbot.command.RunnableC;
-import lui798.folkbot.emote.EmoteParser;
 import lui798.folkbot.util.CustomJSON;
 import lui798.folkbot.util.EncodingUtil;
 import lui798.folkbot.util.TwitchJSON;
@@ -12,7 +11,6 @@ import net.dv8tion.jda.core.entities.Message;
 import net.dv8tion.jda.core.entities.MessageEmbed;
 import net.dv8tion.jda.core.entities.TextChannel;
 import net.dv8tion.jda.core.entities.Webhook;
-import net.dv8tion.jda.core.events.ReadyEvent;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.core.hooks.ListenerAdapter;
 import net.dv8tion.jda.webhook.WebhookClient;
@@ -93,8 +91,7 @@ public class Bot extends ListenerAdapter {
         return null;
     }
 
-    @Override
-    public void onReady(ReadyEvent event) {
+    public void chatLinkReady() {
         TextChannel chatChannel = jda.getTextChannelById(config.getProp("chatChannel"));
 
         boolean existingWebhook = false;
@@ -257,6 +254,7 @@ public class Bot extends ListenerAdapter {
         Command chat = new Command("chat");
         Command user = new Command("user");
         Command clear = new Command("clear");
+        Command screen = new Command("screen");
 
         //------Live command------//
         live.setCom(new RunnableC() {
@@ -297,7 +295,7 @@ public class Bot extends ListenerAdapter {
                 if (argument.equals("start")) {
                     message.delete().queue();
                     if (!irc.isConnected()) {
-                        onReady(null);
+                        chatLinkReady();
                         new Thread(() -> {
                             try {
                                 irc.startBot();
@@ -377,6 +375,28 @@ public class Bot extends ListenerAdapter {
                         "Please type a valid integer. **" + prefix + clear.getName() + "** ***0***")).queue();
             }
         });
+        //------Screenshare command------//
+        screen.setCom(new RunnableC() {
+            @Override
+            public void run(String argument) {
+                run();
+            }
+
+            @Override
+            public void run() {
+                if (message.getMember().getVoiceState().inVoiceChannel()) {
+                    String guildID = channel.getGuild().getId();
+                    String channelID = message.getMember().getVoiceState().getChannel().getId();
+                    channel.sendMessage(responseEmbed("Screenshare "
+                                    + message.getMember().getVoiceState().getChannel().getName(),
+                            "Click [here](https://discordapp.com/channels/" + guildID + "/"
+                                    + channelID + ")")).queue();
+                }
+                else {
+                    channel.sendMessage(responseEmbed("Error", "You are not in a voice channel")).queue();
+                }
+            }
+        });
 
         //EmoteParser parser = new EmoteParser(config.getUser());
 
@@ -391,8 +411,10 @@ public class Bot extends ListenerAdapter {
                 user.run(m);
             else if (clear.equalsInput(m) && message.getMember().getPermissions(channel).contains(Permission.ADMINISTRATOR))
                 clear.run(m);
-//            else if (irc.isConnected())
-//                ircBot.sendMessage(parser.discordToTwitch(m), message.getAuthor().getName());
+            else if (screen.equalsInput(m))
+                screen.run(m);
+//            else if (irc.isConnected() && message.getChannel().getId().equals(config.getProp("chatChannel")))
+//                ircBot.sendMessage(m, message.getAuthor().getName());
         }
     }
 
