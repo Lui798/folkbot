@@ -135,7 +135,7 @@ public class Bot extends ListenerAdapter {
         JsonElement channel = TwitchJSON.getElement(json.getStream(), "channel");
         JsonElement preview = TwitchJSON.getElement(TwitchJSON.getElement(json.getStream(), "preview"), "template");
 
-        Duration date = Duration.between(Instant.from(OffsetDateTime.parse("2019-06-13T20:41:28Z", DateTimeFormatter.ISO_DATE_TIME)), Instant.now());
+        Duration date = Duration.between(Instant.from(OffsetDateTime.parse(CustomJSON.getString(json.getStream(), "created_at"), DateTimeFormatter.ISO_DATE_TIME)), Instant.now());
 
         EmbedBuilder embed = new EmbedBuilder();
         embed.setColor(EMBED_COLOR);
@@ -400,7 +400,7 @@ public class Bot extends ListenerAdapter {
 
         //EmoteParser parser = new EmoteParser(config.getUser());
 
-        if (!event.getAuthor().isBot()) {
+        if (!event.getAuthor().isBot() && message.getAttachments().isEmpty()) {
             String m = message.getContentDisplay();
 
             if (live.equalsInput(m) && message.getMember().getPermissions(channel).contains(Permission.ADMINISTRATOR))
