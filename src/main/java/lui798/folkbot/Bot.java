@@ -420,24 +420,43 @@ public class Bot extends ListenerAdapter {
                         manager.setSendingHandler(playerMain.getHandler());
                         manager.openAudioConnection(voice);
                     }
-                    playerMain.loadItem(new YouTubeHelper().extractVideoIdFromUrl(source));
+                    playerMain.loadItem(new YouTubeHelper().testProcess(source));
                 }
                 else if (argument.startsWith("stop")) {
                     if (playerMain != null) {
                         playerMain.stopPlaying();
+                        channel.sendMessage(responseEmbed("Player Queue", "Cleared queue and left the voice channel.")).queue();
                     }
                     if (manager != null) {
                         manager.closeAudioConnection();
                         manager = null;
                         playerMain = null;
                     }
+                    timer.cancel();
                 }
                 else if (argument.startsWith("skip")) {
                     if (playerMain != null) {
                         playerMain.skipPlaying();
+                        channel.sendMessage(responseEmbed("Player Queue", "Skipped current song.")).queue();
                     }
                     else {
                         channel.sendMessage(responseEmbed("Skip", "There is no song playing.")).queue();
+                    }
+                }
+                else if (argument.startsWith("volume")) {
+                    if (!argument.equals("volume")) {
+                        source = argument.substring(argument.indexOf(" ")+1);
+                    }
+                    else {
+                        channel.sendMessage(Bot.responseEmbed("Volume Level", "Volume set to " + playerMain.getVolume() + "%")).queue();
+                    }
+
+                    if (playerMain != null) {
+                        String vol = playerMain.setVolume(source);
+                        channel.sendMessage(responseEmbed("Volume Adjustment", "Volume set to " + vol + "%")).queue();
+                    }
+                    else {
+                        channel.sendMessage(responseEmbed("Volume Adjustment", "No songs are playing.")).queue();
                     }
                 }
                 else if (argument.startsWith("queue")) {

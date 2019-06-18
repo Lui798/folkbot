@@ -1,9 +1,6 @@
 package lui798.folkbot.player;
 
-import com.sedmelluq.discord.lavaplayer.player.AudioLoadResultHandler;
-import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
-import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager;
-import com.sedmelluq.discord.lavaplayer.player.DefaultAudioPlayerManager;
+import com.sedmelluq.discord.lavaplayer.player.*;
 import com.sedmelluq.discord.lavaplayer.source.AudioSourceManagers;
 import com.sedmelluq.discord.lavaplayer.tools.FriendlyException;
 import com.sedmelluq.discord.lavaplayer.track.AudioPlaylist;
@@ -22,7 +19,11 @@ public class AudioPlayerMain {
 
     public AudioPlayerMain(TextChannel channel) {
         this.channel = channel;
+
         this.playerManager = new DefaultAudioPlayerManager();
+        playerManager.getConfiguration().setResamplingQuality(AudioConfiguration.ResamplingQuality.HIGH);
+        playerManager.getConfiguration().setOpusEncodingQuality(10);
+
         AudioSourceManagers.registerRemoteSources(this.playerManager);
 
         this.player = this.playerManager.createPlayer();
@@ -35,6 +36,10 @@ public class AudioPlayerMain {
 
     public AudioPlayerSendHandler getHandler() {
         return this.handler;
+    }
+
+    public TrackScheduler getScheduler() {
+        return this.scheduler;
     }
 
     public String getQueue() {
@@ -96,5 +101,32 @@ public class AudioPlayerMain {
 
     public void skipPlaying() {
         scheduler.skip();
+    }
+
+    public String getVolume() {
+        return Integer.toString(player.getVolume());
+    }
+
+    public String setVolume(String level) {
+        int level2 = 100;
+        try {
+            if (level.equals("default") || level.equals("normal")) {
+                level2 = 100;
+            }
+            else {
+                level2 = Integer.parseInt(level);
+                if (level2 > 999999999) {
+                    level2 = 999999999;
+                }
+                else if (level2 < 0) {
+                    level2 = 0;
+                }
+            }
+        }
+        catch (NumberFormatException e) {
+            channel.sendMessage(Bot.responseEmbed("Volume Error", "Please type a valid number 0-100.")).queue();
+        }
+        player.setVolume(level2);
+        return Integer.toString(level2);
     }
 }

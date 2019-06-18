@@ -13,9 +13,12 @@ public class TrackScheduler extends AudioEventAdapter {
     private AudioPlayer player;
     private Queue<AudioTrack> queue;
 
+    private boolean donePlaying;
+
     public TrackScheduler(AudioPlayer player) {
         this.player = player;
         this.queue = new ArrayDeque<>();
+        this.donePlaying = false;
     }
 
     public void queue(AudioTrack track) {
@@ -27,6 +30,7 @@ public class TrackScheduler extends AudioEventAdapter {
     }
 
     public void play() {
+        this.donePlaying = false;
         if (player.startTrack(queue.peek(), true)) {
             queue.remove();
         }
@@ -40,6 +44,10 @@ public class TrackScheduler extends AudioEventAdapter {
     public void skip() {
         player.stopTrack();
         play();
+    }
+
+    public boolean donePlaying() {
+        return this.donePlaying;
     }
 
     @Override
@@ -61,6 +69,9 @@ public class TrackScheduler extends AudioEventAdapter {
     public void onTrackEnd(AudioPlayer player, AudioTrack track, AudioTrackEndReason endReason) {
         if (endReason.mayStartNext) {
             play();
+        }
+        if (queue.isEmpty() && player.getPlayingTrack() == null) {
+            this.donePlaying = true;
         }
 
         // endReason == FINISHED: A track finished or died by an exception (mayStartNext = true).
