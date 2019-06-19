@@ -3,6 +3,7 @@ package lui798.folkbot.util;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.net.URL;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -10,25 +11,28 @@ import java.util.regex.Pattern;
 
 public class YouTubeHelper {
 
-    final String youTubeUrlRegEx = "^(https?)?(://)?(www.)?(m.)?((youtube.com)|(youtu.be))/";
-    final String[] videoIdRegex = {"\\?vi?=([^&])", "watch\\?.v=([^&])", "(?:embed|vi?)/([^/?])", "^([A-Za-z0-9\\-\\_]*)"};
+    private static final String youTubeUrlRegEx = "^(https?)?(://)?(www.)?(m.)?((youtube.com)|(youtu.be))/";
+    private static final String[] videoIdRegex = {"\\?vi?=([^&])", "watch\\?.v=([^&])", "(?:embed|vi?)/([^/?])", "^([A-Za-z0-9\\-\\_]*)"};
 
-    public String extractVideoIdFromUrl(String url) {
+    private static final String VIDEO_ID_REGEX = "(?<v>[a-zA-Z0-9_-]{11})";
+    private static final Pattern directVideoIdPattern = Pattern.compile("^" + VIDEO_ID_REGEX + "$");
+
+    public static String extractVideoIdFromUrl(String url) {
         String youTubeLinkWithoutProtocolAndDomain = youTubeLinkWithoutProtocolAndDomain(url);
 
         for(String regex : videoIdRegex) {
             Pattern compiledPattern = Pattern.compile(regex);
-            Matcher matcher = compiledPattern.matcher(youTubeLinkWithoutProtocolAndDomain);
+            Matcher matcher = directVideoIdPattern.matcher(youTubeLinkWithoutProtocolAndDomain);
 
             if(matcher.find()){
-                return testProcess(matcher.group(1));
+                return matcher.group(1);
             }
         }
 
         return null;
     }
 
-    private String youTubeLinkWithoutProtocolAndDomain(String url) {
+    private static String youTubeLinkWithoutProtocolAndDomain(String url) {
         Pattern compiledPattern = Pattern.compile(youTubeUrlRegEx);
         Matcher matcher = compiledPattern.matcher(url);
 
@@ -38,10 +42,10 @@ public class YouTubeHelper {
         return url;
     }
 
-    public String testProcess(String id) {
+    public static String videoUrlProcess(String id) {
         try {
             Runtime rt = Runtime.getRuntime();
-            String[] commands = {"bin\\youtube-dl.exe", "-g", "-f", "171", id};
+            String[] commands = {"bin\\youtube-dl.exe", "-g", "-f", "bestaudio[ext=webm]", id};
             Process proc = rt.exec(commands);
 
             BufferedReader stdInput = new BufferedReader(new
@@ -61,5 +65,16 @@ public class YouTubeHelper {
         }
 
         return null;
+    }
+
+    public static boolean isValidUrl(String url)
+    {
+        try {
+            new URL(url).toURI();
+            return true;
+        }
+        catch (Exception e) {
+            return false;
+        }
     }
 }

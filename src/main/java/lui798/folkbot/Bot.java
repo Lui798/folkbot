@@ -420,7 +420,25 @@ public class Bot extends ListenerAdapter {
                         manager.setSendingHandler(playerMain.getHandler());
                         manager.openAudioConnection(voice);
                     }
-                    playerMain.loadItem(new YouTubeHelper().testProcess(source));
+                    playerMain.loadItem(source.trim());
+
+                    timer.schedule(new TimerTask() {
+                        @Override
+                        public void run() {
+                            if (playerMain.getScheduler().donePlaying() && playerMain.getScheduler().getQueue().isEmpty()) {
+                                if (playerMain != null) {
+                                    playerMain.stopPlaying();
+                                    channel.sendMessage(responseEmbed("Player Queue", "Left the voice channel due to inactivity.")).queue();
+                                }
+                                if (manager != null) {
+                                    manager.closeAudioConnection();
+                                    manager = null;
+                                    playerMain = null;
+                                }
+                                timer.cancel();
+                            }
+                        }
+                    }, 0, 30000);
                 }
                 else if (argument.startsWith("stop")) {
                     if (playerMain != null) {
@@ -449,11 +467,13 @@ public class Bot extends ListenerAdapter {
                     }
                     else {
                         channel.sendMessage(Bot.responseEmbed("Volume Level", "Volume set to " + playerMain.getVolume() + "%")).queue();
+                        return;
                     }
 
                     if (playerMain != null) {
-                        String vol = playerMain.setVolume(source);
-                        channel.sendMessage(responseEmbed("Volume Adjustment", "Volume set to " + vol + "%")).queue();
+                        String vol = playerMain.setVolume(source.trim());
+                        if (vol != null)
+                            channel.sendMessage(responseEmbed("Volume Adjustment", "Volume set to " + vol + "%")).queue();
                     }
                     else {
                         channel.sendMessage(responseEmbed("Volume Adjustment", "No songs are playing.")).queue();

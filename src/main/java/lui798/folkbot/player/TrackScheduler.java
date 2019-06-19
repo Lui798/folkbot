@@ -6,34 +6,33 @@ import com.sedmelluq.discord.lavaplayer.tools.FriendlyException;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrackEndReason;
 
-import java.util.ArrayDeque;
-import java.util.Queue;
+import java.util.ArrayList;
+import java.util.List;
 
 public class TrackScheduler extends AudioEventAdapter {
     private AudioPlayer player;
-    private Queue<AudioTrack> queue;
+    private List<AudioTrack> queue;
 
     private boolean donePlaying;
 
     public TrackScheduler(AudioPlayer player) {
         this.player = player;
-        this.queue = new ArrayDeque<>();
-        this.donePlaying = false;
+        this.queue = new ArrayList<>();
+        this.donePlaying = true;
     }
 
-    public void queue(AudioTrack track) {
+    public void queue(AudioTrack track, AudioTrack yt) {
+        track.setUserData(yt.getInfo());
         queue.add(track);
     }
 
-    public Queue<AudioTrack> getQueue() {
+    public List<AudioTrack> getQueue() {
         return this.queue;
     }
 
     public void play() {
         this.donePlaying = false;
-        if (player.startTrack(queue.peek(), true)) {
-            queue.remove();
-        }
+        player.startTrack(queue.get(0), true);
     }
 
     public void stop() {
@@ -43,7 +42,13 @@ public class TrackScheduler extends AudioEventAdapter {
 
     public void skip() {
         player.stopTrack();
-        play();
+        try {
+            queue.remove(0);
+            play();
+        }
+        catch (IndexOutOfBoundsException e) {
+            return;
+        }
     }
 
     public boolean donePlaying() {
@@ -68,6 +73,7 @@ public class TrackScheduler extends AudioEventAdapter {
     @Override
     public void onTrackEnd(AudioPlayer player, AudioTrack track, AudioTrackEndReason endReason) {
         if (endReason.mayStartNext) {
+            queue.remove(0);
             play();
         }
         if (queue.isEmpty() && player.getPlayingTrack() == null) {
