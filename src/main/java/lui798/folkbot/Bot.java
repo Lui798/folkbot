@@ -1,26 +1,13 @@
 package lui798.folkbot;
 
-import com.google.gson.JsonElement;
 import lui798.folkbot.command.Command;
 import lui798.folkbot.command.RunnableC;
 import lui798.folkbot.player.AudioPlayerMain;
-import lui798.folkbot.player.AudioPlayerSendHandler;
-import lui798.folkbot.util.CustomJSON;
-import lui798.folkbot.util.EncodingUtil;
-import lui798.folkbot.util.TwitchJSON;
-import lui798.folkbot.util.YouTubeHelper;
 import net.dv8tion.jda.core.*;
 import net.dv8tion.jda.core.entities.*;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.core.hooks.ListenerAdapter;
 import net.dv8tion.jda.core.managers.AudioManager;
-import net.dv8tion.jda.webhook.WebhookClient;
-import net.dv8tion.jda.webhook.WebhookMessageBuilder;
-import org.pircbotx.Configuration;
-import org.pircbotx.PircBotX;
-import org.pircbotx.exception.IrcException;
-import org.pircbotx.hooks.events.PingEvent;
-import org.pircbotx.hooks.types.GenericMessageEvent;
 
 import javax.security.auth.login.LoginException;
 import java.io.IOException;
@@ -36,22 +23,12 @@ public class Bot extends ListenerAdapter {
     private static Config config;
     private static String prefix;
     private static JDA jda;
-    private static WebhookClient webhook;
-    private static PircBotX irc;
-    private static IRCBot ircBot;
-    private static TwitchJSON json;
-    private static TwitchJSON channel;
 
-    private NumberFormat numberFormat = NumberFormat.getInstance();
     private Message currentMessage = null;
-    private int maxViewers = 0;
 
     //Live notification settings
-    private static final int EMBED_COLOR = 6570404;
-    private static final int VOD_COLOR = 16070455;
-    private static final String API_URL = "https://api.twitch.tv/kraken/";
-    private static String USER_ID;
-    private static String CLIENT_ID;
+    public static final int ERROR_COLOR = 14696512;
+    public static final int EMBED_COLOR = 7506394;
 
     public static void main(String[] args) {
         config = new Config();
@@ -62,18 +39,9 @@ public class Bot extends ListenerAdapter {
         new Bot(builder);
     }
 
-    public void setJson() {
-        CLIENT_ID = config.getClient();
-        USER_ID = config.getUser();
-        json = new TwitchJSON(API_URL + "streams/" + USER_ID + "?client_id=" + CLIENT_ID);
-        channel = new TwitchJSON(API_URL + "channels/" + USER_ID + "?client_id=" + CLIENT_ID);
-    }
-
     public Bot(JDABuilder builder) {
         jda = build(builder);
         jda.addEventListener(this);
-
-        setJson();
     }
 
     public JDA build(JDABuilder builder) {
@@ -92,159 +60,21 @@ public class Bot extends ListenerAdapter {
         return null;
     }
 
-    public void chatLinkReady() {
-        TextChannel chatChannel = jda.getTextChannelById(config.getProp("chatChannel"));
-
-        boolean existingWebhook = false;
-        for (Webhook hook : chatChannel.getWebhooks().complete()) {
-            if (hook.getName().equals(jda.getSelfUser().getName())) {
-                webhook = hook.newClient().build();
-                existingWebhook = true;
-            }
-        }
-        if (!existingWebhook) {
-            webhook = chatChannel
-                    .createWebhook(jda.getSelfUser().getName())
-                    .complete()
-                    .newClient()
-                    .build();
-        }
-
-        ircBot = new IRCBot();
-        Configuration ircConfig = new Configuration.Builder()
-                .setName(config.getProp("ircUser"))
-                .addServer("irc.chat.twitch.tv", 6667)
-                .setServerPassword(config.getProp("ircOAuth"))
-                .addListener(ircBot)
-                .addAutoJoinChannel("#" + config.getUser())
-                .buildConfiguration();
-
-        irc = new PircBotX(ircConfig);
-    }
-
-
-    /*-----------------------------------
-    Live notifications
-    -----------------------------------*/
-
-    public boolean checkIfLive() {
-        json.updateJson();
-        return !json.getStream().isJsonNull();
-    }
-
-    public MessageEmbed liveEmbed() {
-        JsonElement channel = TwitchJSON.getElement(json.getStream(), "channel");
-        JsonElement preview = TwitchJSON.getElement(TwitchJSON.getElement(json.getStream(), "preview"), "template");
-
-        Duration date = Duration.between(Instant.from(OffsetDateTime.parse(CustomJSON.getString(json.getStream(), "created_at"), DateTimeFormatter.ISO_DATE_TIME)), Instant.now());
-
-        EmbedBuilder embed = new EmbedBuilder();
-        embed.setColor(EMBED_COLOR);
-        embed.setAuthor(TwitchJSON.getString(channel, "display_name"), null,
-                TwitchJSON.getString(channel, "logo"));
-        embed.setImage(preview.getAsString().replace("{width}", "1152")
-                .replace("{height}", "648"));
-        embed.setThumbnail(TwitchJSON.getString(channel, "logo"));
-        embed.addField("Stream", "[" + TwitchJSON.getString(channel, "status") + "]("
-                + TwitchJSON.getString(channel, "url") + ")", false);
-        if (!TwitchJSON.getString(channel, "game").equals("")) {
-            String gameUrl = "https://www.twitch.tv/directory/game/"
-                    + EncodingUtil.encodeURIComponent(TwitchJSON.getString(channel, "game"));
-
-            embed.addField("Game", "[" + TwitchJSON.getString(channel, "game") + "]("
-                    + gameUrl + ")", false);
-        }
-        embed.setTimestamp(Instant.now());
-        embed.setFooter(numberFormat.format(Integer.parseInt(TwitchJSON.getString(json.getStream(), "viewers")))
-                + " Viewers | " + date.toHours() + "h" + date.toMinutes()%60 + "m Uptime", null);
-
-        return embed.build();
-    }
-
-    public MessageEmbed vodEmbed() {
-        TwitchJSON vodJSON = new TwitchJSON(API_URL + "channels/" + USER_ID
-                + "/videos?client_id=" + CLIENT_ID + "&broadcast_type=archive");
-
-        JsonElement video = TwitchJSON.getElement(vodJSON.getRoot(), "videos").getAsJsonArray().get(0);
-
-        EmbedBuilder embed = new EmbedBuilder();
-        embed.setColor(VOD_COLOR);
-        embed.setAuthor(TwitchJSON.getString(channel.getRoot(), "display_name"), null,
-                TwitchJSON.getString(channel.getRoot(), "logo"));
-        if (TwitchJSON.getString(video, "preview").contains("_404")) {
-            embed.setImage(TwitchJSON.getString(video, "preview"));
-        } else {
-            embed.setImage(TwitchJSON.getString(video, "preview")
-                    .substring(0, TwitchJSON.getString(video, "preview").lastIndexOf("-")+1)
-                    + "1152x648.jpg");
-        }
-        embed.setThumbnail(TwitchJSON.getString(channel.getRoot(), "logo"));
-        embed.addField("Stream VOD", "[" + TwitchJSON.getString(video, "title")
-                + "](" + TwitchJSON.getString(video, "url") + ")", false);
-        if (!TwitchJSON.getString(video, "game").equals("")) {
-            String gameUrl = "https://www.twitch.tv/directory/game/"
-                    + EncodingUtil.encodeURIComponent(TwitchJSON.getString(video, "game"));
-
-            embed.addField("Game", "[" + TwitchJSON.getString(video, "game") + "]("
-                    + gameUrl + ")", false);
-        }
-        embed.setTimestamp(Instant.now());
-        embed.setFooter(numberFormat.format(maxViewers) + " Peak Viewers", null);
-
-        return embed.build();
-    }
-
-    public void updateLiveMessage(boolean isVod) {
-        if (isVod) {
-            currentMessage = currentMessage.editMessage(vodEmbed()).complete();
-        }
-        else {
-            currentMessage = currentMessage.editMessage(liveEmbed()).complete();
-        }
-    }
-
-    public void sendLiveMessage() {
-        TextChannel textChannel = jda.getTextChannelById(config.getLiveChannel());
-        currentMessage = textChannel.sendMessage(liveEmbed()).complete();
-    }
-
-    public void liveMain() {
-        if (checkIfLive() && currentMessage == null) {
-            sendLiveMessage();
-            System.out.println("Sent live message");
-            maxViewers = 0;
-        }
-        else if (checkIfLive() && currentMessage != null) {
-            if (Integer.parseInt(TwitchJSON.getString(json.getStream(), "viewers")) > maxViewers) {
-                maxViewers = Integer.parseInt(TwitchJSON.getString(json.getStream(), "viewers"));
-            }
-            updateLiveMessage(false);
-            System.out.println("Updated live message");
-        }
-        else if (!checkIfLive()) {
-            if (currentMessage != null) {
-                updateLiveMessage(true);
-                System.out.println("Updated live message to vod");
-            }
-            currentMessage = null;
-        }
-    }
 
 
     /*-----------------------------------
     Discord messages and commands
     -----------------------------------*/
 
-    public static MessageEmbed responseEmbed(String name, String value) {
+    public static MessageEmbed responseEmbed(String name, String value, int color) {
         EmbedBuilder embed = new EmbedBuilder();
-        embed.setColor(EMBED_COLOR);
+        embed.setColor(color);
         embed.addField(name, value, false);
 
         return embed.build();
     }
 
     private Timer timer = new Timer();
-    private boolean timerStarted = false;
     private AudioManager manager = null;
     private AudioPlayerMain playerMain = null;
 
@@ -253,95 +83,10 @@ public class Bot extends ListenerAdapter {
         TextChannel channel = event.getTextChannel();
         Message message = event.getMessage();
 
-        Command live = new Command("live");
-        Command chat = new Command("chat");
-        Command user = new Command("user");
         Command clear = new Command("clear");
         Command screen = new Command("screen");
         Command player = new Command("player");
 
-        //------Live command------//
-        live.setCom(new RunnableC() {
-            @Override
-            public void run(String argument) {
-                if (argument.equals("start")) {
-                    message.delete().queue();
-                    if (!timerStarted) {
-                        timer.schedule(new TimerTask() {
-                            @Override
-                            public void run() {
-                                liveMain();
-                                timerStarted = true;
-                            }
-                        }, 0, 30000);
-                    }
-                }
-                else if (argument.equals("stop") && timerStarted) {
-                    timer.cancel();
-                    timerStarted = false;
-                }
-                else {
-                    config.setProp("liveChannel", argument);
-                    channel.sendMessage(responseEmbed("Successfully set!",
-                            "Live notifications will be sent to: **" + argument + "**")).queue();
-                    System.out.println("Set live channel");
-                }
-            }
-            @Override
-            public void run() {
-                run(channel.getId());
-            }
-        });
-        //------Chat command------//
-        chat.setCom(new RunnableC() {
-            @Override
-            public void run(String argument) {
-                if (argument.equals("start")) {
-                    message.delete().queue();
-                    if (!irc.isConnected()) {
-                        chatLinkReady();
-                        new Thread(() -> {
-                            try {
-                                irc.startBot();
-                            } catch (IrcException | IOException e) {
-                                e.printStackTrace();
-                            }
-                        }).start();
-                        System.out.println("Chatbot started");
-                    }
-                } else if (argument.equals("stop")) {
-                    irc.sendIRC().quitServer();
-                    webhook.close();
-                    channel.sendMessage(responseEmbed("Chatbot stopped",
-                            "Messages may continue to come through \nif chat was moving fast")).queue();
-                    System.out.println("Chatbot stopped");
-                } else {
-                    config.setProp("chatChannel", argument);
-                    channel.sendMessage(responseEmbed("Successfully set!",
-                            "Twitch messages be sent to: **" + argument + "**")).queue();
-                    System.out.println("Set chat channel");
-                }
-            }
-            @Override
-            public void run() {
-                run(channel.getId());
-            }
-        });
-        //------User command------//
-        user.setCom(new RunnableC() {
-            @Override
-            public void run(String argument) {
-                config.setProp("twitchUser", argument);
-                setJson();
-                channel.sendMessage(responseEmbed("Successfully set!",
-                        "User is now set to: **" + argument + "**")).queue();
-            }
-            @Override
-            public void run() {
-                channel.sendMessage(responseEmbed("Wrong input!",
-                        "Please type a username. **" + prefix + user.getName() + "** ***name***")).queue();
-            }
-        });
         //------Clear command------//
         clear.setCom(new RunnableC() {
             @Override
@@ -351,13 +96,13 @@ public class Bot extends ListenerAdapter {
                 try { n = Integer.valueOf(argument); }
                 catch (NumberFormatException e) {
                     channel.sendMessage(responseEmbed("Wrong input!",
-                            "Please type a valid integer. **" + prefix + clear.getName() + "** ***0***")).queue();
+                            "Please type a valid integer. **" + prefix + clear.getName() + "** ***0***", ERROR_COLOR)).queue();
                     return;
                 }
 
                 if (n < 2) {
                     channel.sendMessage(responseEmbed("Wrong input!",
-                            "Please type a integer greater than 1. **" + prefix + clear.getName() + "** ***2***")).queue();
+                            "Please type a integer greater than 1. **" + prefix + clear.getName() + "** ***2***", ERROR_COLOR)).queue();
                     return;
                 }
 
@@ -376,7 +121,7 @@ public class Bot extends ListenerAdapter {
             @Override
             public void run() {
                 channel.sendMessage(responseEmbed("Wrong input!",
-                        "Please type a valid integer. **" + prefix + clear.getName() + "** ***0***")).queue();
+                        "Please type a valid integer. **" + prefix + clear.getName() + "** ***0***", ERROR_COLOR)).queue();
             }
         });
         //------Screenshare command------//
@@ -394,10 +139,10 @@ public class Bot extends ListenerAdapter {
                     channel.sendMessage(responseEmbed("Screenshare "
                                     + message.getMember().getVoiceState().getChannel().getName(),
                             "Click [here](https://discordapp.com/channels/" + guildID + "/"
-                                    + channelID + ")")).queue();
+                                    + channelID + ")", EMBED_COLOR)).queue();
                 }
                 else {
-                    channel.sendMessage(responseEmbed("Error", "You are not in a voice channel")).queue();
+                    channel.sendMessage(responseEmbed("Error", "You are not in a voice channel", ERROR_COLOR)).queue();
                 }
             }
         });
@@ -405,7 +150,7 @@ public class Bot extends ListenerAdapter {
         player.setCom(new RunnableC() {
             @Override
             public void run(String argument) {
-                String source = "";
+                String source;
                 VoiceChannel voice = message.getGuild().getVoiceChannelById(
                         message.getMember().getVoiceState().getChannel().getId());
 
@@ -415,20 +160,25 @@ public class Bot extends ListenerAdapter {
                     }
                     else return;
                     if (manager == null && playerMain == null) {
-                        playerMain = new AudioPlayerMain(channel);
+                        playerMain = new AudioPlayerMain();
                         manager = message.getGuild().getAudioManager();
                         manager.setSendingHandler(playerMain.getHandler());
                         manager.openAudioConnection(voice);
                     }
-                    playerMain.loadItem(source.trim());
 
+                    MessageEmbed response = playerMain.loadItem(source.trim());
+                    if (response != null) {
+                        channel.sendMessage(response).queue();
+                    }
+
+                    timer = new Timer();
                     timer.schedule(new TimerTask() {
                         @Override
                         public void run() {
                             if (playerMain.getScheduler().donePlaying() && playerMain.getScheduler().getQueue().isEmpty()) {
                                 if (playerMain != null) {
                                     playerMain.stopPlaying();
-                                    channel.sendMessage(responseEmbed("Player Queue", "Left the voice channel due to inactivity.")).queue();
+                                    channel.sendMessage(responseEmbed("Player Queue", "Left the voice channel due to inactivity.", EMBED_COLOR)).queue();
                                 }
                                 if (manager != null) {
                                     manager.closeAudioConnection();
@@ -438,12 +188,12 @@ public class Bot extends ListenerAdapter {
                                 timer.cancel();
                             }
                         }
-                    }, 0, 30000);
+                    }, 5000, 30000);
                 }
                 else if (argument.startsWith("stop")) {
                     if (playerMain != null) {
                         playerMain.stopPlaying();
-                        channel.sendMessage(responseEmbed("Player Queue", "Cleared queue and left the voice channel.")).queue();
+                        channel.sendMessage(responseEmbed("Player Queue", "Cleared queue and left the voice channel.", EMBED_COLOR)).queue();
                     }
                     if (manager != null) {
                         manager.closeAudioConnection();
@@ -455,10 +205,10 @@ public class Bot extends ListenerAdapter {
                 else if (argument.startsWith("skip")) {
                     if (playerMain != null) {
                         playerMain.skipPlaying();
-                        channel.sendMessage(responseEmbed("Player Queue", "Skipped current song.")).queue();
+                        channel.sendMessage(responseEmbed("Player Queue", "Skipped current song.", EMBED_COLOR)).queue();
                     }
                     else {
-                        channel.sendMessage(responseEmbed("Skip", "There is no song playing.")).queue();
+                        channel.sendMessage(responseEmbed("Skip", "There is no song playing.", ERROR_COLOR)).queue();
                     }
                 }
                 else if (argument.startsWith("volume")) {
@@ -466,25 +216,25 @@ public class Bot extends ListenerAdapter {
                         source = argument.substring(argument.indexOf(" ")+1);
                     }
                     else {
-                        channel.sendMessage(Bot.responseEmbed("Volume Level", "Volume set to " + playerMain.getVolume() + "%")).queue();
+                        channel.sendMessage(Bot.responseEmbed("Volume Level", "Volume is set to " + playerMain.getVolume() + "%", EMBED_COLOR)).queue();
                         return;
                     }
 
                     if (playerMain != null) {
-                        String vol = playerMain.setVolume(source.trim());
+                        MessageEmbed vol = playerMain.setVolume(source.trim());
                         if (vol != null)
-                            channel.sendMessage(responseEmbed("Volume Adjustment", "Volume set to " + vol + "%")).queue();
+                            channel.sendMessage(vol).queue();
                     }
                     else {
-                        channel.sendMessage(responseEmbed("Volume Adjustment", "No songs are playing.")).queue();
+                        channel.sendMessage(responseEmbed("Volume Adjustment", "No songs are playing.", ERROR_COLOR)).queue();
                     }
                 }
                 else if (argument.startsWith("queue")) {
                     if (playerMain != null) {
-                        channel.sendMessage(responseEmbed("Player Queue", playerMain.getQueue())).queue();
+                        channel.sendMessage(responseEmbed("Player Queue", playerMain.getQueue(), EMBED_COLOR)).queue();
                     }
                     else {
-                        channel.sendMessage(responseEmbed("Player Queue", "No songs are in the queue.")).queue();
+                        channel.sendMessage(responseEmbed("Player Queue", "No songs are in the queue.", ERROR_COLOR)).queue();
                     }
                 }
             }
@@ -495,62 +245,15 @@ public class Bot extends ListenerAdapter {
             }
         });
 
-        //EmoteParser parser = new EmoteParser(config.getUser());
-
         if (!event.getAuthor().isBot() && message.getAttachments().isEmpty()) {
             String m = message.getContentDisplay();
 
-            if (live.equalsInput(m) && message.getMember().getPermissions(channel).contains(Permission.ADMINISTRATOR))
-                live.run(m);
-            else if (chat.equalsInput(m) && message.getMember().getPermissions(channel).contains(Permission.ADMINISTRATOR))
-                chat.run(m);
-            else if (user.equalsInput(m) && message.getMember().getPermissions(channel).contains(Permission.ADMINISTRATOR))
-                user.run(m);
-            else if (clear.equalsInput(m) && message.getMember().getPermissions(channel).contains(Permission.ADMINISTRATOR))
+            if (clear.equalsInput(m) && message.getMember().getPermissions(channel).contains(Permission.ADMINISTRATOR))
                 clear.run(m);
             else if (screen.equalsInput(m))
                 screen.run(m);
             else if (player.equalsInput(m))
                 player.run(m);
-//            else if (irc.isConnected() && message.getChannel().getId().equals(config.getProp("chatChannel")))
-//                ircBot.sendMessage(m, message.getAuthor().getName());
-        }
-    }
-
-
-    /*-----------------------------------
-    Twitch irc chatbot
-    -----------------------------------*/
-
-    public static class IRCBot extends org.pircbotx.hooks.ListenerAdapter {
-
-        @Override
-        public void onGenericMessage(GenericMessageEvent event) {
-            String message = event.getMessage();
-            String name = event.getUser().getNick();
-
-            //EmoteParser parser = new EmoteParser(config.getUser());
-            //message = parser.twitchToDiscord(message);
-
-            CustomJSON twitchUser = new CustomJSON(API_URL + "channels/" + name + "?client_id=" + CLIENT_ID);
-            String avatarUrl = CustomJSON.getString(twitchUser.getRoot(), "logo");
-
-            WebhookMessageBuilder builder = new WebhookMessageBuilder()
-                    .setUsername(name)
-                    .setAvatarUrl(avatarUrl)
-                    .setContent(message);
-
-            webhook.send(builder.build());
-        }
-
-        @Override
-        public void onPing(PingEvent event) {
-            irc.sendRaw().rawLineNow(String.format("PONG %s\r\n", event.getPingValue()));
-        }
-
-        private void sendMessage(String message, String nick) {
-            irc.sendIRC().message("#" + config.getUser(), "[" + nick + "]: " + message);
-            System.out.println("Sent message to IRC #" + config.getUser());
         }
     }
 }

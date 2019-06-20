@@ -5,11 +5,9 @@ import java.util.Properties;
 
 public class Config {
     private final String FILE_NAME = "folkbot.conf";
-    private File file;
     private Properties prop;
 
     public Config() {
-        file = new File(FILE_NAME);
         prop = new Properties();
         noFile();
         loadValues();
@@ -22,18 +20,6 @@ public class Config {
 
     public String getPrefix() {
         return getProp("prefix");
-    }
-
-    public String getClient() {
-        return getProp("twitchClientID");
-    }
-
-    public String getUser() {
-        return getProp("twitchUser");
-    }
-
-    public String getLiveChannel() {
-        return getProp("liveChannel");
     }
 
     public String getProp(String key) {
@@ -86,12 +72,7 @@ public class Config {
     private void setDefaultValues() {
         prop.setProperty("prefix", "?");
         prop.setProperty("discordToken", "bot-token-here");
-        prop.setProperty("twitchUser", "twitch-username");
-        prop.setProperty("twitchClientID", "twitch-client-id");
-        prop.setProperty("liveChannel", "live-channel-id");
-        prop.setProperty("chatChannel", "chat-channel-id");
-        prop.setProperty("ircUser", "twitch-chatbot-username");
-        prop.setProperty("ircOAuth", "oauth:password-here");
+
         saveValues();
     }
 

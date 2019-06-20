@@ -56,7 +56,7 @@ public class YouTubeHelper {
 
             // read the output from the command
             String s = null;
-            while ((s = stdInput.readLine()) != null) {
+            if ((s = stdInput.readLine()) != null) {
                 return s;
             }
         }

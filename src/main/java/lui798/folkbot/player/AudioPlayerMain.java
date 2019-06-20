@@ -9,7 +9,7 @@ import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrackInfo;
 import lui798.folkbot.Bot;
 import lui798.folkbot.util.YouTubeHelper;
-import net.dv8tion.jda.core.entities.TextChannel;
+import net.dv8tion.jda.core.entities.MessageEmbed;
 
 public class AudioPlayerMain {
 
@@ -18,11 +18,7 @@ public class AudioPlayerMain {
     private AudioPlayerSendHandler handler;
     private TrackScheduler scheduler;
 
-    private TextChannel channel;
-
-    public AudioPlayerMain(TextChannel channel) {
-        this.channel = channel;
-
+    public AudioPlayerMain() {
         this.playerManager = new DefaultAudioPlayerManager();
         playerManager.getConfiguration().setResamplingQuality(AudioConfiguration.ResamplingQuality.MEDIUM);
         playerManager.getConfiguration().setOpusEncodingQuality(10);
@@ -47,12 +43,6 @@ public class AudioPlayerMain {
 
     public String getQueue() {
         String output = "";
-//        AudioTrack currentTrack = player.getPlayingTrack();
-//        AudioTrackInfo currentInfo = (AudioTrackInfo) currentTrack.getUserData();
-//
-//        if (currentTrack != null) {
-//            output += "1). " + currentInfo.author + " - " + currentInfo.title + "\n";
-//        }
 
         if (!scheduler.getQueue().isEmpty()) {
             int count = 1;
@@ -66,14 +56,16 @@ public class AudioPlayerMain {
         if (output.isEmpty()) {
             return "No songs are in the queue.";
         }
-        System.out.println(output);
+
         return output;
     }
 
     private AudioTrack yt;
+    private MessageEmbed response;
 
-    public void loadItem(String id) {
+    public MessageEmbed loadItem(String id) {
         String url;
+        response = null;
 
         try {
             url = YouTubeHelper.videoUrlProcess(id);
@@ -85,15 +77,15 @@ public class AudioPlayerMain {
         }
 
         if (yt == null && !YouTubeHelper.isValidUrl(url)) {
-            channel.sendMessage(Bot.responseEmbed("No Match Found", "No song was found for that link")).queue();
-            return;
+            response = Bot.responseEmbed("No Match Found", "No song was found for that link", Bot.ERROR_COLOR);
+            return response;
         }
 
         for (AudioTrack track : scheduler.getQueue()) {
             AudioTrackInfo info = (AudioTrackInfo) track.getUserData();
             if (info.title.equals(yt.getInfo().title)) {
-                channel.sendMessage(Bot.responseEmbed("Loading Error", "That song is already in the queue.")).queue();
-                return;
+                response = Bot.responseEmbed("Loading Error", "That song is already in the queue.", Bot.ERROR_COLOR);
+                return response;
             }
         }
 
@@ -121,16 +113,18 @@ public class AudioPlayerMain {
 
             @Override
             public void noMatches() {
-                channel.sendMessage(Bot.responseEmbed("No Match Found", "No song was found for that link")).queue();
+                response = Bot.responseEmbed("No Match Found", "No song was found for that link", Bot.ERROR_COLOR);
             }
 
             @Override
             public void loadFailed(FriendlyException exception) {
                 if (exception.severity == FriendlyException.Severity.COMMON) {
-                    channel.sendMessage(Bot.responseEmbed("Loading Error", exception.getMessage())).queue();
+                    Bot.responseEmbed("Loading Error", exception.getMessage(), Bot.ERROR_COLOR);
                 }
             }
         });
+
+        return response;
     }
 
     public void stopPlaying() {
@@ -145,16 +139,16 @@ public class AudioPlayerMain {
         return Integer.toString(player.getVolume());
     }
 
-    public String setVolume(String level) {
-        int level2 = 100;
+    public MessageEmbed setVolume(String level) {
+        int level2;
         try {
             if (level.equals("default") || level.equals("normal")) {
                 level2 = 100;
             }
             else {
                 level2 = Integer.parseInt(level);
-                if (level2 > 999999) {
-                    level2 = 999999;
+                if (level2 > 5000) {
+                    level2 = 5000;
                 }
                 else if (level2 < 0) {
                     level2 = 0;
@@ -162,10 +156,12 @@ public class AudioPlayerMain {
             }
         }
         catch (NumberFormatException e) {
-            channel.sendMessage(Bot.responseEmbed("Volume Error", "Please type a valid number 0-100.")).queue();
-            return null;
+            response = Bot.responseEmbed("Volume Error", "Please type a valid number 0-100.", Bot.ERROR_COLOR);
+            return response;
         }
         player.setVolume(level2);
-        return Integer.toString(level2);
+        response = Bot.responseEmbed("Volume Adjustment", "Volume set to " + level2 + "%", Bot.EMBED_COLOR);
+
+        return response;
     }
 }
