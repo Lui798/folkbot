@@ -82,10 +82,17 @@ public class Bot extends ListenerAdapter {
     public void onMessageReceived(MessageReceivedEvent event) {
         TextChannel channel = event.getTextChannel();
         Message message = event.getMessage();
+        VoiceChannel voice = message.getGuild().getVoiceChannelById(
+                message.getMember().getVoiceState().getChannel().getId());
 
         Command clear = new Command("clear");
         Command screen = new Command("screen");
-        Command player = new Command("player");
+
+        Command play = new Command("play");
+        Command stop = new Command("stop");
+        Command skip = new Command("skip");
+        Command volume = new Command("volume");
+        Command queue = new Command("queue");
 
         //------Clear command------//
         clear.setCom(new RunnableC() {
@@ -147,101 +154,115 @@ public class Bot extends ListenerAdapter {
             }
         });
         //------Player command------//
-        player.setCom(new RunnableC() {
+        play.setCom(new RunnableC() {
             @Override
             public void run(String argument) {
-                String source;
-                VoiceChannel voice = message.getGuild().getVoiceChannelById(
-                        message.getMember().getVoiceState().getChannel().getId());
+                if (manager == null && playerMain == null) {
+                    playerMain = new AudioPlayerMain();
+                    manager = message.getGuild().getAudioManager();
+                    manager.setSendingHandler(playerMain.getHandler());
+                    manager.openAudioConnection(voice);
+                }
 
-                if (argument.startsWith("play")) {
-                    if (!argument.equals("play")) {
-                        source = argument.substring(argument.indexOf(" ")+1);
-                    }
-                    else return;
-                    if (manager == null && playerMain == null) {
-                        playerMain = new AudioPlayerMain();
-                        manager = message.getGuild().getAudioManager();
-                        manager.setSendingHandler(playerMain.getHandler());
-                        manager.openAudioConnection(voice);
-                    }
+                MessageEmbed response = playerMain.loadItem(argument.trim());
+                if (response != null) {
+                    channel.sendMessage(response).queue();
+                }
 
-                    MessageEmbed response = playerMain.loadItem(source.trim());
-                    if (response != null) {
-                        channel.sendMessage(response).queue();
-                    }
-
-                    timer = new Timer();
-                    timer.schedule(new TimerTask() {
-                        @Override
-                        public void run() {
-                            if (playerMain.getScheduler().donePlaying() && playerMain.getScheduler().getQueue().isEmpty()) {
-                                if (playerMain != null) {
-                                    playerMain.stopPlaying();
-                                    channel.sendMessage(responseEmbed("Player Queue", "Left the voice channel due to inactivity.", EMBED_COLOR)).queue();
-                                }
-                                if (manager != null) {
-                                    manager.closeAudioConnection();
-                                    manager = null;
-                                    playerMain = null;
-                                }
-                                timer.cancel();
+                timer = new Timer();
+                timer.schedule(new TimerTask() {
+                    @Override
+                    public void run() {
+                        if (playerMain.getScheduler().donePlaying() && playerMain.getScheduler().getQueue().isEmpty()) {
+                            if (playerMain != null) {
+                                playerMain.stopPlaying();
+                                channel.sendMessage(responseEmbed("Player Queue", "Left the voice channel due to inactivity.", EMBED_COLOR)).queue();
                             }
+                            if (manager != null) {
+                                manager.closeAudioConnection();
+                                manager = null;
+                                playerMain = null;
+                            }
+                            timer.cancel();
                         }
-                    }, 5000, 30000);
-                }
-                else if (argument.startsWith("stop")) {
-                    if (playerMain != null) {
-                        playerMain.stopPlaying();
-                        channel.sendMessage(responseEmbed("Player Queue", "Cleared queue and left the voice channel.", EMBED_COLOR)).queue();
                     }
-                    if (manager != null) {
-                        manager.closeAudioConnection();
-                        manager = null;
-                        playerMain = null;
-                    }
-                    timer.cancel();
-                }
-                else if (argument.startsWith("skip")) {
-                    if (playerMain != null) {
-                        playerMain.skipPlaying();
-                        channel.sendMessage(responseEmbed("Player Queue", "Skipped current song.", EMBED_COLOR)).queue();
-                    }
-                    else {
-                        channel.sendMessage(responseEmbed("Skip", "There is no song playing.", ERROR_COLOR)).queue();
-                    }
-                }
-                else if (argument.startsWith("volume")) {
-                    if (!argument.equals("volume")) {
-                        source = argument.substring(argument.indexOf(" ")+1);
-                    }
-                    else {
-                        channel.sendMessage(Bot.responseEmbed("Volume Level", "Volume is set to " + playerMain.getVolume() + "%", EMBED_COLOR)).queue();
-                        return;
-                    }
-
-                    if (playerMain != null) {
-                        MessageEmbed vol = playerMain.setVolume(source.trim());
-                        if (vol != null)
-                            channel.sendMessage(vol).queue();
-                    }
-                    else {
-                        channel.sendMessage(responseEmbed("Volume Adjustment", "No songs are playing.", ERROR_COLOR)).queue();
-                    }
-                }
-                else if (argument.startsWith("queue")) {
-                    if (playerMain != null) {
-                        channel.sendMessage(responseEmbed("Player Queue", playerMain.getQueue(), EMBED_COLOR)).queue();
-                    }
-                    else {
-                        channel.sendMessage(responseEmbed("Player Queue", "No songs are in the queue.", ERROR_COLOR)).queue();
-                    }
-                }
+                }, 5000, 30000);
             }
 
             @Override
             public void run() {
 
+            }
+        });
+        stop.setCom(new RunnableC() {
+            @Override
+            public void run(String argument) {
+                run();
+            }
+
+            @Override
+            public void run() {
+                if (playerMain != null) {
+                    playerMain.stopPlaying();
+                    channel.sendMessage(responseEmbed("Player Queue", "Cleared queue and left the voice channel.", EMBED_COLOR)).queue();
+                }
+                if (manager != null) {
+                    manager.closeAudioConnection();
+                    manager = null;
+                    playerMain = null;
+                }
+                timer.cancel();
+            }
+        });
+        skip.setCom(new RunnableC() {
+            @Override
+            public void run(String argument) {
+                run();
+            }
+
+            @Override
+            public void run() {
+                if (playerMain != null) {
+                    playerMain.skipPlaying();
+                    channel.sendMessage(responseEmbed("Player Queue", "Skipped current song.", EMBED_COLOR)).queue();
+                }
+                else {
+                    channel.sendMessage(responseEmbed("Skip", "There is no song playing.", ERROR_COLOR)).queue();
+                }
+            }
+        });
+        volume.setCom(new RunnableC() {
+            @Override
+            public void run(String argument) {
+                if (playerMain != null) {
+                    MessageEmbed vol = playerMain.setVolume(argument.trim());
+                    if (vol != null)
+                        channel.sendMessage(vol).queue();
+                }
+                else {
+                    channel.sendMessage(responseEmbed("Volume Adjustment", "No songs are playing.", ERROR_COLOR)).queue();
+                }
+            }
+
+            @Override
+            public void run() {
+                channel.sendMessage(Bot.responseEmbed("Volume Level", "Volume is set to " + playerMain.getVolume() + "%", EMBED_COLOR)).queue();
+            }
+        });
+        queue.setCom(new RunnableC() {
+            @Override
+            public void run(String argument) {
+                run();
+            }
+
+            @Override
+            public void run() {
+                if (playerMain != null) {
+                    channel.sendMessage(responseEmbed("Player Queue", playerMain.getQueue(), EMBED_COLOR)).queue();
+                }
+                else {
+                    channel.sendMessage(responseEmbed("Player Queue", "No songs are in the queue.", ERROR_COLOR)).queue();
+                }
             }
         });
 
@@ -252,8 +273,16 @@ public class Bot extends ListenerAdapter {
                 clear.run(m);
             else if (screen.equalsInput(m))
                 screen.run(m);
-            else if (player.equalsInput(m))
-                player.run(m);
+            else if (play.equalsInput(m))
+                play.run(m);
+            else if (stop.equalsInput(m))
+                stop.run(m);
+            else if (skip.equalsInput(m))
+                skip.run(m);
+            else if (volume.equalsInput(m))
+                volume.run(m);
+            else if (queue.equalsInput(m))
+                queue.run(m);
         }
     }
 }

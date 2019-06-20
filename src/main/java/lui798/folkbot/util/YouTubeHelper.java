@@ -12,7 +12,6 @@ import java.util.regex.Pattern;
 public class YouTubeHelper {
 
     private static final String youTubeUrlRegEx = "^(https?)?(://)?(www.)?(m.)?((youtube.com)|(youtu.be))/";
-    private static final String[] videoIdRegex = {"\\?vi?=([^&])", "watch\\?.v=([^&])", "(?:embed|vi?)/([^/?])", "^([A-Za-z0-9\\-\\_]*)"};
 
     private static final String VIDEO_ID_REGEX = "(?<v>[a-zA-Z0-9_-]{11})";
     private static final Pattern directVideoIdPattern = Pattern.compile("^" + VIDEO_ID_REGEX + "$");
@@ -20,13 +19,9 @@ public class YouTubeHelper {
     public static String extractVideoIdFromUrl(String url) {
         String youTubeLinkWithoutProtocolAndDomain = youTubeLinkWithoutProtocolAndDomain(url);
 
-        for(String regex : videoIdRegex) {
-            Pattern compiledPattern = Pattern.compile(regex);
-            Matcher matcher = directVideoIdPattern.matcher(youTubeLinkWithoutProtocolAndDomain);
-
-            if(matcher.find()){
-                return matcher.group(1);
-            }
+        Matcher matcher = directVideoIdPattern.matcher(youTubeLinkWithoutProtocolAndDomain);
+        if(matcher.find()){
+            return matcher.group(1);
         }
 
         return null;
@@ -51,9 +46,6 @@ public class YouTubeHelper {
             BufferedReader stdInput = new BufferedReader(new
                     InputStreamReader(proc.getInputStream()));
 
-            BufferedReader stdError = new BufferedReader(new
-                    InputStreamReader(proc.getErrorStream()));
-
             // read the output from the command
             String s = null;
             if ((s = stdInput.readLine()) != null) {
@@ -67,8 +59,7 @@ public class YouTubeHelper {
         return null;
     }
 
-    public static boolean isValidUrl(String url)
-    {
+    public static boolean isValidUrl(String url) {
         try {
             new URL(url).toURI();
             return true;
