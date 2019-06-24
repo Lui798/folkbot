@@ -18,7 +18,6 @@ import java.time.temporal.ChronoUnit;
 import java.util.*;
 
 public class Bot {
-    private static Config config;
     private static String prefix;
     private static JDA jda;
 
@@ -27,7 +26,7 @@ public class Bot {
     public static final int EMBED_COLOR = 7506394;
 
     public static void main(String[] args) throws Exception {
-        config = new Config();
+        Config config = new Config();
         prefix = config.getPrefix();
         JDABuilder builder = new JDABuilder(AccountType.BOT);
 
@@ -35,7 +34,7 @@ public class Bot {
         new Bot(builder);
     }
 
-    public Bot(JDABuilder builder) throws InterruptedException {
+    private Bot(JDABuilder builder) throws InterruptedException {
         jda = build(builder);
 
         jda.awaitReady();
@@ -44,7 +43,7 @@ public class Bot {
         }
     }
 
-    public JDA build(JDABuilder builder) {
+    private JDA build(JDABuilder builder) {
         try {
             return builder.build();
         }
@@ -71,7 +70,7 @@ public class Bot {
     private class Listener extends ListenerAdapter {
         private Guild guild;
 
-        public Listener(Guild guild) {
+        private Listener(Guild guild) {
             this.guild = guild;
         }
 

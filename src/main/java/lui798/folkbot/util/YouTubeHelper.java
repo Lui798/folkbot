@@ -47,7 +47,6 @@ public class YouTubeHelper {
             // read the output from the command
             String s = null;
             if ((s = stdInput.readLine()) != null) {
-                System.out.println("\nPLAYING FROM YOUTUBE AUDIO STREAM:\n" + s);
                 return s;
             }
         }

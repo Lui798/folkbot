@@ -26,11 +26,6 @@ public class Config {
         return prop.getProperty(key);
     }
 
-    public void setProp(String key, String value) {
-        prop.setProperty(key, value);
-        saveValues();
-    }
-
     private void noFile() {
         try {
             InputStream is = new FileInputStream(FILE_NAME);
@@ -76,7 +71,7 @@ public class Config {
         saveValues();
     }
 
-    public void saveValues() {
+    private void saveValues() {
         FileOutputStream f;
         try {
             f = new FileOutputStream(FILE_NAME);
@@ -92,7 +87,7 @@ public class Config {
         }
     }
 
-    public void loadValues() {
+    private void loadValues() {
         FileInputStream f;
         try {
             f = new FileInputStream(FILE_NAME);

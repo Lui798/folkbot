@@ -17,7 +17,7 @@ public class Command {
         return name;
     }
 
-    public String getArgument(String input) {
+    private String getArgument(String input) {
         String result;
         try {
             result = input.substring(input.indexOf(" "));
