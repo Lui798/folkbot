@@ -45,7 +45,7 @@ public class AudioPlayerMain {
         String output = "";
 
         if (!scheduler.getQueue().isEmpty()) {
-            for (int i = 0; i < scheduler.getQueue().size(); i++) {
+            for (int i = 0; i < scheduler.getQueue().size() && i < 5; i++) {
                 AudioTrack track = scheduler.getQueue().get(i);
                 AudioTrackInfo info = (AudioTrackInfo) track.getUserData();
                 output += i+1 + "). " + info.author + " - " + info.title + "\n";
@@ -67,7 +67,6 @@ public class AudioPlayerMain {
         response = null;
 
         if (!id.contains("list=")) {
-            System.out.println("ran normally");
             try {
                 url = YouTubeHelper.videoUrlProcess(id);
                 yt = (AudioTrack) new YoutubeAudioSourceManager().loadTrackWithVideoId(YouTubeHelper.extractVideoIdFromUrl(id), false);
@@ -77,7 +76,6 @@ public class AudioPlayerMain {
             }
         }
         else {
-            System.out.println("Playlist detected " + id);
             url = id;
         }
 
@@ -95,10 +93,12 @@ public class AudioPlayerMain {
 
             @Override
             public void playlistLoaded(AudioPlaylist playlist) {
-                System.out.println("Playlist " + playlist.getName());
-                for (AudioTrack track : playlist.getTracks()) {
-                    System.out.println(track.getIdentifier());
-                    loadItem(track.getIdentifier());
+                System.out.println(playlist.getTracks().get(0).getIdentifier());
+                loadItem(playlist.getTracks().get(0).getIdentifier());
+
+                for (int i = 1; i < playlist.getTracks().size(); i++) {
+                    System.out.println(playlist.getTracks().get(i).getIdentifier());
+                    loadItem(playlist.getTracks().get(i).getIdentifier());
                 }
             }
 

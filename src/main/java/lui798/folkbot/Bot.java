@@ -282,7 +282,7 @@ public class Bot {
                     volume.run(m);
                 else if (queue.equalsInput(m))
                     queue.run(m);
-            } else if (!message.getAttachments().isEmpty()) {
+            } else if (!message.getAttachments().isEmpty() && !message.getAttachments().get(0).isImage()) {
                 if (play.equalsInput(m))
                     play.run(m + " " + message.getAttachments().get(0).getUrl());
             }
