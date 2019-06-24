@@ -1,4 +1,4 @@
-package lui798.folkbot;
+package lui798.folkbot.util;
 
 import java.io.*;
 import java.util.Properties;
