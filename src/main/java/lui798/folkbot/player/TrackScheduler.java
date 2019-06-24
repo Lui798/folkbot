@@ -13,12 +13,9 @@ public class TrackScheduler extends AudioEventAdapter {
     private AudioPlayer player;
     private List<AudioTrack> queue;
 
-    private boolean donePlaying;
-
     public TrackScheduler(AudioPlayer player) {
         this.player = player;
         this.queue = new ArrayList<>();
-        this.donePlaying = true;
     }
 
     public void queue(AudioTrack track, AudioTrack yt) {
@@ -31,8 +28,13 @@ public class TrackScheduler extends AudioEventAdapter {
     }
 
     public void play() {
-        this.donePlaying = false;
         player.startTrack(queue.get(0), true);
+    }
+
+    public void play(int index) {
+        player.stopTrack();
+        queue.subList(0, index).clear();
+        play();
     }
 
     public void stop() {
@@ -49,10 +51,6 @@ public class TrackScheduler extends AudioEventAdapter {
         catch (IndexOutOfBoundsException e) {
             return;
         }
-    }
-
-    public boolean donePlaying() {
-        return this.donePlaying;
     }
 
     @Override
@@ -75,9 +73,6 @@ public class TrackScheduler extends AudioEventAdapter {
         if (endReason.mayStartNext) {
             queue.remove(0);
             play();
-        }
-        if (queue.isEmpty() && player.getPlayingTrack() == null) {
-            this.donePlaying = true;
         }
 
         // endReason == FINISHED: A track finished or died by an exception (mayStartNext = true).

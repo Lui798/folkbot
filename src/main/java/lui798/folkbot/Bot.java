@@ -6,16 +6,13 @@ import lui798.folkbot.player.AudioPlayerMain;
 import net.dv8tion.jda.core.*;
 import net.dv8tion.jda.core.entities.*;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
+import net.dv8tion.jda.core.events.message.react.MessageReactionAddEvent;
 import net.dv8tion.jda.core.hooks.ListenerAdapter;
 import net.dv8tion.jda.core.managers.AudioManager;
 
 import javax.security.auth.login.LoginException;
 import java.io.IOException;
-import java.time.Duration;
-import java.text.NumberFormat;
-import java.time.Instant;
 import java.time.OffsetDateTime;
-import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 
@@ -78,12 +75,21 @@ public class Bot extends ListenerAdapter {
     private AudioManager manager = null;
     private AudioPlayerMain playerMain = null;
 
+    private Message queueMessage = null;
+
+    @Override
+    public void onMessageReactionAdd(MessageReactionAddEvent event) {
+        if (!event.getUser().isBot() && event.getMessageId().equals(queueMessage.getId())) {
+            int index = Integer.parseInt(event.getReactionEmote().getName().substring(0, 1)) - 1;
+            playerMain.getScheduler().play(index);
+        }
+    }
+
     @Override
     public void onMessageReceived(MessageReceivedEvent event) {
         TextChannel channel = event.getTextChannel();
         Message message = event.getMessage();
-        VoiceChannel voice = message.getGuild().getVoiceChannelById(
-                message.getMember().getVoiceState().getChannel().getId());
+        VoiceChannel voice = message.getMember().getVoiceState().getChannel();
 
         Command clear = new Command("clear");
         Command screen = new Command("screen");
@@ -168,25 +174,6 @@ public class Bot extends ListenerAdapter {
                 if (response != null) {
                     channel.sendMessage(response).queue();
                 }
-
-                timer = new Timer();
-                timer.schedule(new TimerTask() {
-                    @Override
-                    public void run() {
-                        if (playerMain.getScheduler().donePlaying() && playerMain.getScheduler().getQueue().isEmpty()) {
-                            if (playerMain != null) {
-                                playerMain.stopPlaying();
-                                channel.sendMessage(responseEmbed("Player Queue", "Left the voice channel due to inactivity.", EMBED_COLOR)).queue();
-                            }
-                            if (manager != null) {
-                                manager.closeAudioConnection();
-                                manager = null;
-                                playerMain = null;
-                            }
-                            timer.cancel();
-                        }
-                    }
-                }, 5000, 30000);
             }
 
             @Override
@@ -257,8 +244,14 @@ public class Bot extends ListenerAdapter {
 
             @Override
             public void run() {
+                queueMessage = null;
                 if (playerMain != null) {
-                    channel.sendMessage(responseEmbed("Player Queue", playerMain.getQueue(), EMBED_COLOR)).queue();
+                    String[] numbers = new String[] {"\u0030\u20E3", "\u0031\u20E3", "\u0032\u20E3", "\u0033\u20E3", "\u0034\u20E3", "\u0035\u20E3", "\u0036\u20E3", "\u0037\u20E3", "\u0038\u20E3", "\u0039\u20E3"};
+
+                    queueMessage = channel.sendMessage(responseEmbed("Player Queue", playerMain.getQueue(), EMBED_COLOR)).complete();
+                    for (int i = 1; i < playerMain.getScheduler().getQueue().size(); i++) {
+                        queueMessage.addReaction(numbers[i+1]).queue();
+                    }
                 }
                 else {
                     channel.sendMessage(responseEmbed("Player Queue", "No songs are in the queue.", ERROR_COLOR)).queue();
@@ -266,9 +259,9 @@ public class Bot extends ListenerAdapter {
             }
         });
 
-        if (!event.getAuthor().isBot() && message.getAttachments().isEmpty()) {
-            String m = message.getContentDisplay();
+        String m = message.getContentDisplay();
 
+        if (!event.getAuthor().isBot() && message.getAttachments().isEmpty()) {
             if (clear.equalsInput(m) && message.getMember().getPermissions(channel).contains(Permission.ADMINISTRATOR))
                 clear.run(m);
             else if (screen.equalsInput(m))
@@ -283,6 +276,10 @@ public class Bot extends ListenerAdapter {
                 volume.run(m);
             else if (queue.equalsInput(m))
                 queue.run(m);
+        }
+        else if (!event.getAuthor().isBot() && !message.getAttachments().isEmpty()) {
+            if (play.equalsInput(m))
+                play.run(m + " " + message.getAttachments().get(0).getUrl());
         }
     }
 }

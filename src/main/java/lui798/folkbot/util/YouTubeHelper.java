@@ -7,8 +7,6 @@ import java.net.URL;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-
-
 public class YouTubeHelper {
 
     private static final String youTubeUrlRegEx = "^(https?)?(://)?(www.)?(m.)?((youtube.com)|(youtu.be))/";
@@ -49,6 +47,7 @@ public class YouTubeHelper {
             // read the output from the command
             String s = null;
             if ((s = stdInput.readLine()) != null) {
+                System.out.println("\nPLAYING FROM YOUTUBE AUDIO STREAM:\n" + s);
                 return s;
             }
         }

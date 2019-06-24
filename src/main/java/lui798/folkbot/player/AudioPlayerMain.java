@@ -45,11 +45,10 @@ public class AudioPlayerMain {
         String output = "";
 
         if (!scheduler.getQueue().isEmpty()) {
-            int count = 1;
-            for (AudioTrack track : scheduler.getQueue()) {
+            for (int i = 0; i < scheduler.getQueue().size(); i++) {
+                AudioTrack track = scheduler.getQueue().get(i);
                 AudioTrackInfo info = (AudioTrackInfo) track.getUserData();
-                output += count + "). " + info.author + " - " + info.title + "\n";
-                count++;
+                output += i+1 + "). " + info.author + " - " + info.title + "\n";
             }
         }
 
@@ -81,20 +80,13 @@ public class AudioPlayerMain {
             return response;
         }
 
-        for (AudioTrack track : scheduler.getQueue()) {
-            AudioTrackInfo info = (AudioTrackInfo) track.getUserData();
-            if (info.title.equals(yt.getInfo().title)) {
-                response = Bot.responseEmbed("Loading Error", "That song is already in the queue.", Bot.ERROR_COLOR);
-                return response;
-            }
-        }
-
         playerManager.loadItem(url, new AudioLoadResultHandler() {
             @Override
             public void trackLoaded(AudioTrack track) {
                 if (yt == null) {
                     yt = track;
                 }
+
                 scheduler.queue(track, yt);
                 scheduler.play();
             }
@@ -144,6 +136,9 @@ public class AudioPlayerMain {
         try {
             if (level.equals("default") || level.equals("normal")) {
                 level2 = 100;
+            }
+            else if (level.equals("max")) {
+                level2 = 5000;
             }
             else {
                 level2 = Integer.parseInt(level);
