@@ -19,6 +19,9 @@ public class TrackScheduler extends AudioEventAdapter {
     }
 
     public void queue(AudioTrack track, AudioTrack yt) {
+        if (yt == null)
+            yt = track;
+
         track.setUserData(yt.getInfo());
         queue.add(track);
     }

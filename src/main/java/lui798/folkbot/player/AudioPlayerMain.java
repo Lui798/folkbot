@@ -66,13 +66,19 @@ public class AudioPlayerMain {
         String url;
         response = null;
 
-        try {
-            url = YouTubeHelper.videoUrlProcess(id);
-            yt = (AudioTrack) new YoutubeAudioSourceManager().loadTrackWithVideoId(YouTubeHelper.extractVideoIdFromUrl(id), false);
+        if (!id.contains("list=")) {
+            System.out.println("ran normally");
+            try {
+                url = YouTubeHelper.videoUrlProcess(id);
+                yt = (AudioTrack) new YoutubeAudioSourceManager().loadTrackWithVideoId(YouTubeHelper.extractVideoIdFromUrl(id), false);
+            } catch (FriendlyException e) {
+                url = id;
+                yt = null;
+            }
         }
-        catch (FriendlyException e) {
+        else {
+            System.out.println("Playlist detected " + id);
             url = id;
-            yt = null;
         }
 
         if (yt == null && !YouTubeHelper.isValidUrl(url)) {
@@ -83,24 +89,17 @@ public class AudioPlayerMain {
         playerManager.loadItem(url, new AudioLoadResultHandler() {
             @Override
             public void trackLoaded(AudioTrack track) {
-                if (yt == null) {
-                    yt = track;
-                }
-
                 scheduler.queue(track, yt);
                 scheduler.play();
             }
 
             @Override
             public void playlistLoaded(AudioPlaylist playlist) {
-//                for (AudioTrack track : playlist.getTracks()) {
-//                    scheduler.queue(track);
-//                }
-//                scheduler.play();
-                if (yt == null) {
-                    yt = playlist.getTracks().get(0);
+                System.out.println("Playlist " + playlist.getName());
+                for (AudioTrack track : playlist.getTracks()) {
+                    System.out.println(track.getIdentifier());
+                    loadItem(track.getIdentifier());
                 }
-                scheduler.queue(playlist.getTracks().get(0), yt);
             }
 
             @Override
@@ -111,7 +110,7 @@ public class AudioPlayerMain {
             @Override
             public void loadFailed(FriendlyException exception) {
                 if (exception.severity == FriendlyException.Severity.COMMON) {
-                    Bot.responseEmbed("Loading Error", exception.getMessage(), Bot.ERROR_COLOR);
+                    response = Bot.responseEmbed("Loading Error", exception.getMessage(), Bot.ERROR_COLOR);
                 }
             }
         });

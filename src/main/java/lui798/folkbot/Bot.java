@@ -78,6 +78,8 @@ public class Bot {
         private AudioPlayerMain playerMain = null;
         private Message queueMessage = null;
 
+        private final String[] numbers = new String[]{"\u0030\u20E3", "\u0031\u20E3", "\u0032\u20E3", "\u0033\u20E3", "\u0034\u20E3", "\u0035\u20E3", "\u0036\u20E3", "\u0037\u20E3", "\u0038\u20E3", "\u0039\u20E3"};
+
         @Override
         public void onMessageReactionAdd(MessageReactionAddEvent event) {
             if (!event.getGuild().getId().equals(guild.getId())) return;
@@ -85,6 +87,12 @@ public class Bot {
             if (!event.getUser().isBot() && event.getMessageId().equals(queueMessage.getId())) {
                 int index = Integer.parseInt(event.getReactionEmote().getName().substring(0, 1)) - 1;
                 playerMain.getScheduler().play(index);
+
+                queueMessage.clearReactions().queue();
+                queueMessage.editMessage(responseEmbed("Player Queue", playerMain.getQueue(), EMBED_COLOR)).queue();
+                for (int i = 1; i < playerMain.getScheduler().getQueue().size(); i++) {
+                    queueMessage.addReaction(numbers[i + 1]).queue();
+                }
             }
         }
 
@@ -247,8 +255,6 @@ public class Bot {
                 public void run() {
                     queueMessage = null;
                     if (playerMain != null) {
-                        String[] numbers = new String[]{"\u0030\u20E3", "\u0031\u20E3", "\u0032\u20E3", "\u0033\u20E3", "\u0034\u20E3", "\u0035\u20E3", "\u0036\u20E3", "\u0037\u20E3", "\u0038\u20E3", "\u0039\u20E3"};
-
                         queueMessage = channel.sendMessage(responseEmbed("Player Queue", playerMain.getQueue(), EMBED_COLOR)).complete();
                         for (int i = 1; i < playerMain.getScheduler().getQueue().size(); i++) {
                             queueMessage.addReaction(numbers[i + 1]).queue();
