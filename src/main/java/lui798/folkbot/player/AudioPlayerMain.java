@@ -48,7 +48,7 @@ public class AudioPlayerMain {
             for (int i = 0; i < scheduler.getQueue().size() && i < 5; i++) {
                 AudioTrack track = scheduler.getQueue().get(i);
                 AudioTrackInfo info = (AudioTrackInfo) track.getUserData();
-                output += i+1 + "). " + info.author + " - " + info.title + "\n";
+                output += i+1 + "). [" + info.author + " - " + info.title + "](" + info.uri + ")\n";
             }
         }
 
@@ -87,17 +87,19 @@ public class AudioPlayerMain {
         playerManager.loadItem(url, new AudioLoadResultHandler() {
             @Override
             public void trackLoaded(AudioTrack track) {
+                if (yt != null)
+                    System.out.println("Loaded: " + yt.getIdentifier());
+                else
+                    System.out.println("Loaded: " + track.getIdentifier());
+
                 scheduler.queue(track, yt);
                 scheduler.play();
             }
 
             @Override
             public void playlistLoaded(AudioPlaylist playlist) {
-                System.out.println(playlist.getTracks().get(0).getIdentifier());
                 loadItem(playlist.getTracks().get(0).getIdentifier());
-
                 for (int i = 1; i < playlist.getTracks().size(); i++) {
-                    System.out.println(playlist.getTracks().get(i).getIdentifier());
                     loadItem(playlist.getTracks().get(i).getIdentifier());
                 }
             }

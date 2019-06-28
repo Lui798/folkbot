@@ -42,11 +42,13 @@ public class Command {
     }
 
     public void run(String input) {
-        if (getArgument(input) == null) {
-            com.run();
-        }
-        else {
-            com.run(getArgument(input));
-        }
+        new Thread(() -> {
+            if (getArgument(input) == null) {
+                com.run();
+            }
+            else {
+                com.run(getArgument(input));
+            }
+        }).start();
     }
 }

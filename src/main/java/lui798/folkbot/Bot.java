@@ -75,29 +75,9 @@ public class Bot {
 
     private class Listener extends ListenerAdapter {
         private Guild guild;
-        private Timer timer;
 
         private Listener(Guild guild) {
             this.guild = guild;
-
-            timer = new Timer();
-            timer.schedule(new TimerTask() {
-                @Override
-                public void run() {
-                    if (playerMain != null) {
-                        if (playerMain.getScheduler().getQueue().isEmpty()) {
-                            if (playerMain != null) {
-                                playerMain.stopPlaying();
-                            }
-                            if (manager != null) {
-                                manager.closeAudioConnection();
-                                manager = null;
-                                playerMain = null;
-                            }
-                        }
-                    }
-                }
-            }, 0, 10000);
         }
 
         private AudioManager manager = null;
@@ -117,7 +97,7 @@ public class Bot {
 
                 queueMessage.clearReactions().queue();
                 queueMessage.editMessage(responseEmbed("Player Queue", playerMain.getQueue(), EMBED_COLOR)).queue();
-                for (int i = 1; i < playerMain.getScheduler().getQueue().size(); i++) {
+                for (int i = 1; i < playerMain.getScheduler().getQueue().size() && i < 5; i++) {
                     queueMessage.addReaction(numbers[i + 1]).queue();
                 }
             }
@@ -243,6 +223,11 @@ public class Bot {
 
                 @Override
                 public void run() {
+                    if (queueMessage != null) {
+                        queueMessage.clearReactions().queue();
+                        queueMessage = null;
+                    }
+
                     if (playerMain != null) {
                         playerMain.stopPlaying();
                         channel.sendMessage(responseEmbed("Player Queue", "Cleared queue and left the voice channel.", EMBED_COLOR)).queue();
@@ -262,6 +247,11 @@ public class Bot {
 
                 @Override
                 public void run() {
+                    if (queueMessage != null) {
+                        queueMessage.clearReactions().queue();
+                        queueMessage = null;
+                    }
+
                     if (playerMain != null) {
                         playerMain.skipPlaying();
                         channel.sendMessage(responseEmbed("Player Queue", "Skipped current song.", EMBED_COLOR)).queue();
@@ -295,10 +285,14 @@ public class Bot {
 
                 @Override
                 public void run() {
-                    queueMessage = null;
+                    if (queueMessage != null) {
+                        queueMessage.clearReactions().queue();
+                        queueMessage = null;
+                    }
+
                     if (playerMain != null) {
                         queueMessage = channel.sendMessage(responseEmbed("Player Queue", playerMain.getQueue(), EMBED_COLOR)).complete();
-                        for (int i = 1; i < playerMain.getScheduler().getQueue().size(); i++) {
+                        for (int i = 1; i < playerMain.getScheduler().getQueue().size() && i < 5; i++) {
                             queueMessage.addReaction(numbers[i + 1]).queue();
                         }
                     } else {
