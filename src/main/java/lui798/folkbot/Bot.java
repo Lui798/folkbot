@@ -4,16 +4,18 @@ import lui798.folkbot.command.Command;
 import lui798.folkbot.command.RunnableC;
 import lui798.folkbot.player.AudioPlayerMain;
 import lui798.folkbot.util.Config;
+import lui798.folkbot.util.DependencyFile;
 import net.dv8tion.jda.core.*;
 import net.dv8tion.jda.core.entities.*;
-import net.dv8tion.jda.core.events.ReadyEvent;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.core.events.message.react.MessageReactionAddEvent;
 import net.dv8tion.jda.core.hooks.ListenerAdapter;
 import net.dv8tion.jda.core.managers.AudioManager;
 
 import javax.security.auth.login.LoginException;
+import java.io.File;
 import java.io.IOException;
+import java.net.URL;
 import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
@@ -27,6 +29,9 @@ public class Bot {
     public static final int EMBED_COLOR = 7506394;
 
     public static void main(String[] args) throws Exception {
+        new DependencyFile(new URL("https://yt-dl.org/downloads/2019.06.27/youtube-dl.exe"),
+                System.getProperty("user.dir") + File.separator + "bin", "youtube-dl.exe");
+
         Config config = new Config();
         prefix = config.getPrefix();
         JDABuilder builder = new JDABuilder(AccountType.BOT);

@@ -1,6 +1,7 @@
 # idea
 out
 build
+bin
 *.ipr
 *.iws
 *.iml
