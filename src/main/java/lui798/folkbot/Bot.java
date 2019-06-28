@@ -6,6 +6,7 @@ import lui798.folkbot.player.AudioPlayerMain;
 import lui798.folkbot.util.Config;
 import net.dv8tion.jda.core.*;
 import net.dv8tion.jda.core.entities.*;
+import net.dv8tion.jda.core.events.ReadyEvent;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.core.events.message.react.MessageReactionAddEvent;
 import net.dv8tion.jda.core.hooks.ListenerAdapter;
@@ -69,14 +70,35 @@ public class Bot {
 
     private class Listener extends ListenerAdapter {
         private Guild guild;
+        private Timer timer;
 
         private Listener(Guild guild) {
             this.guild = guild;
+
+            timer = new Timer();
+            timer.schedule(new TimerTask() {
+                @Override
+                public void run() {
+                    if (playerMain != null) {
+                        if (playerMain.getScheduler().getQueue().isEmpty()) {
+                            if (playerMain != null) {
+                                playerMain.stopPlaying();
+                            }
+                            if (manager != null) {
+                                manager.closeAudioConnection();
+                                manager = null;
+                                playerMain = null;
+                            }
+                        }
+                    }
+                }
+            }, 0, 10000);
         }
 
         private AudioManager manager = null;
         private AudioPlayerMain playerMain = null;
         private Message queueMessage = null;
+        private TextChannel sleeping = null;
 
         private final String[] numbers = new String[]{"\u0030\u20E3", "\u0031\u20E3", "\u0032\u20E3", "\u0033\u20E3", "\u0034\u20E3", "\u0035\u20E3", "\u0036\u20E3", "\u0037\u20E3", "\u0038\u20E3", "\u0039\u20E3"};
 
@@ -106,6 +128,7 @@ public class Bot {
 
             Command clear = new Command("clear");
             Command screen = new Command("screen");
+            Command sleep = new Command("sleep");
 
             Command play = new Command("play");
             Command stop = new Command("stop");
@@ -169,6 +192,20 @@ public class Bot {
                     } else {
                         channel.sendMessage(responseEmbed("Error", "You are not in a voice channel", ERROR_COLOR)).queue();
                     }
+                }
+            });
+            sleep.setCom(new RunnableC() {
+                @Override
+                public void run(String argument) {
+                    run();
+                }
+
+                @Override
+                public void run() {
+                    if (sleeping == null)
+                        sleeping = message.getTextChannel();
+                    else
+                        sleeping = null;
                 }
             });
             //------Player command------//
@@ -272,6 +309,8 @@ public class Bot {
                     clear.run(m);
                 else if (screen.equalsInput(m))
                     screen.run(m);
+                else if (sleep.equalsInput(m))
+                    sleep.run(m);
                 else if (play.equalsInput(m))
                     play.run(m);
                 else if (stop.equalsInput(m))
@@ -282,6 +321,9 @@ public class Bot {
                     volume.run(m);
                 else if (queue.equalsInput(m))
                     queue.run(m);
+                else if (sleeping != null && sleeping == event.getTextChannel()) {
+                    event.getMessage().delete().queue();
+                }
             } else if (!message.getAttachments().isEmpty() && !message.getAttachments().get(0).isImage()) {
                 if (play.equalsInput(m))
                     play.run(m + " " + message.getAttachments().get(0).getUrl());
