@@ -15,9 +15,9 @@ public class YouTubeHelper {
     private static final Pattern directVideoIdPattern = Pattern.compile("^" + VIDEO_ID_REGEX + "$");
 
     public static String extractVideoIdFromUrl(String url) {
-        String youTubeLinkWithoutProtocolAndDomain = youTubeLinkWithoutProtocolAndDomain(url);
+        //String youTubeLinkWithoutProtocolAndDomain = youTubeLinkWithoutProtocolAndDomain(url);
 
-        Matcher matcher = directVideoIdPattern.matcher(youTubeLinkWithoutProtocolAndDomain);
+        Matcher matcher = directVideoIdPattern.matcher(url);
         if(matcher.find()){
             return matcher.group(1);
         }
