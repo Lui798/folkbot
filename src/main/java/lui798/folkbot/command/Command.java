@@ -33,11 +33,11 @@ public class Command {
 
     public boolean equalsInput(String input) {
         if (getArgument(input) == null) {
-            if (input.substring(1).equals(Bot.prefix + name))
+            if (input.equals(Bot.prefix + name))
                 return true;
         }
         else {
-            if (input.substring(1, input.indexOf(" ")).equals(Bot.prefix + name))
+            if (input.substring(0, input.indexOf(" ")).equals(Bot.prefix + name))
                 return true;
         }
         return false;
