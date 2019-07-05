@@ -143,7 +143,8 @@ public class Bot {
 
                     OffsetDateTime twoWeeksAgo = OffsetDateTime.now().minus(2, ChronoUnit.WEEKS);
 
-                    List<Message> messages = channel.getHistory().retrievePast(n + 1).complete();
+                    message.delete().queue();
+                    List<Message> messages = channel.getHistory().retrievePast(n).complete();
                     messages.removeIf(m -> m.getCreationTime().isBefore(twoWeeksAgo));
 
                     if (messages.isEmpty()) return;
@@ -187,8 +188,10 @@ public class Bot {
 
                 @Override
                 public void run() {
-                    if (sleeping == null)
+                    if (sleeping == null) {
                         sleeping = message.getTextChannel();
+                        message.delete().queue();
+                    }
                     else
                         sleeping = null;
                 }
@@ -274,7 +277,11 @@ public class Bot {
 
                 @Override
                 public void run() {
-                    channel.sendMessage(Bot.responseEmbed("Volume Level", "Volume is set to " + playerMain.getVolume() + "%", EMBED_COLOR)).queue();
+                    if (playerMain != null)
+                        channel.sendMessage(Bot.responseEmbed("Volume Level", "Volume is set to " + playerMain.getVolume() + "%", EMBED_COLOR)).queue();
+                    else {
+                        channel.sendMessage(Bot.responseEmbed("Error", "Bot is not in a voice channel.", ERROR_COLOR)).queue();
+                    }
                 }
             });
             queue.setCom(new RunnableC() {
@@ -308,7 +315,7 @@ public class Bot {
                     clear.run(m);
                 else if (screen.equalsInput(m))
                     screen.run(m);
-                else if (sleep.equalsInput(m))
+                else if (sleep.equalsInput(m) && message.getMember().getPermissions(channel).contains(Permission.ADMINISTRATOR))
                     sleep.run(m);
                 else if (play.equalsInput(m))
                     play.run(m);
