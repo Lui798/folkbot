@@ -1,5 +1,7 @@
 package lui798.folkbot.command;
 
+import lui798.folkbot.Bot;
+
 public class Command {
 
     private String name;
@@ -31,11 +33,11 @@ public class Command {
 
     public boolean equalsInput(String input) {
         if (getArgument(input) == null) {
-            if (input.substring(1).equals(name))
+            if (input.substring(1).equals(Bot.prefix + name))
                 return true;
         }
         else {
-            if (input.substring(1, input.indexOf(" ")).equals(name))
+            if (input.substring(1, input.indexOf(" ")).equals(Bot.prefix + name))
                 return true;
         }
         return false;

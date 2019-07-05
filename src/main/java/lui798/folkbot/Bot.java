@@ -21,7 +21,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.*;
 
 public class Bot {
-    private static String prefix;
+    public static String prefix;
     private static JDA jda;
 
     //Live notification settings
@@ -194,6 +194,7 @@ public class Bot {
                     }
                     else
                         sleeping = null;
+                        message.delete().queue();
                 }
             });
             //------Player command------//
@@ -327,9 +328,10 @@ public class Bot {
                     volume.run(m);
                 else if (queue.equalsInput(m))
                     queue.run(m);
-                else if (sleeping != null && sleeping == event.getTextChannel()) {
+                else if (sleeping != null && sleeping == event.getTextChannel())
                     event.getMessage().delete().queue();
-                }
+                else return;
+                System.out.println(message.getAuthor().getName() + " > " + m);
             } else if (!message.getAttachments().isEmpty() && !message.getAttachments().get(0).isImage()) {
                 if (play.equalsInput(m))
                     play.run(m + " " + message.getAttachments().get(0).getUrl());
