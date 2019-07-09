@@ -91,7 +91,7 @@ public class Bot {
         public void onMessageReactionAdd(MessageReactionAddEvent event) {
             if (!event.getGuild().getId().equals(guild.getId())) return;
 
-            if (!event.getUser().isBot() && event.getMessageId().equals(queueMessage.getId())) {
+            if (!event.getUser().isBot() && queueMessage != null && event.getMessageId().equals(queueMessage.getId())) {
                 int index = Integer.parseInt(event.getReactionEmote().getName().substring(0, 1)) - 1;
                 playerMain.getScheduler().play(index);
 
@@ -120,6 +120,8 @@ public class Bot {
             Command skip = new Command("skip");
             Command volume = new Command("volume");
             Command queue = new Command("queue");
+
+            Command teams = new Command("teams");
 
             //------Clear command------//
             clear.setCom(new RunnableC() {
@@ -309,6 +311,62 @@ public class Bot {
                 }
             });
 
+            teams.setCom(new RunnableC() {
+                @Override
+                public void run(String argument) {
+                    List<Member> members = new ArrayList<>();
+                    members.addAll(message.getGuild().getMembers());
+                    members.removeIf(m -> m.getUser().isBot());
+
+                    if (argument.equals("assign")) {
+                        for (Member member : members) {
+                            if (member.getRoles().contains(guild.getJDA().getRoleById("597209753470500866"))
+                                    || member.getRoles().contains(guild.getJDA().getRoleById("597209871393226762"))) {
+                                channel.sendMessage(responseEmbed("Error", "Teams are already assigned.\nPlease run "
+                                        + prefix + "teams clear first.", ERROR_COLOR)).queue();
+                                return;
+                            }
+                        }
+
+                        Random r = new Random();
+                        List<Member> assigned = new ArrayList<>();
+
+                        int numRed = members.size() / 2;
+                        int n;
+
+                        for (int i = 0; i < numRed; i++) {
+                             n = r.nextInt(members.size());
+                            if (i > 0) {
+                                while (assigned.contains(members.get(n))) {
+                                    n = r.nextInt(members.size());
+                                }
+                            }
+                            guild.getController().addRolesToMember(members.get(n), guild.getJDA().getRoleById("597209753470500866")).queue();
+                            assigned.add(members.get(n));
+                        }
+                        for (int i = 0; i < members.size(); i++) {
+                            n = r.nextInt(members.size());
+                            while (assigned.contains(members.get(n))) {
+                                n = r.nextInt(members.size());
+                            }
+                            guild.getController().addRolesToMember(members.get(n), guild.getJDA().getRoleById("597209871393226762")).queue();
+                            assigned.add(members.get(n));
+                        }
+                    }
+                    else if (argument.equals("clear")) {
+                        for (Member member : members) {
+                            guild.getController().removeSingleRoleFromMember(member, guild.getJDA().getRoleById("597209753470500866")).queue();
+                            guild.getController().removeSingleRoleFromMember(member, guild.getJDA().getRoleById("597209871393226762")).queue();
+                        }
+                    }
+                }
+
+                @Override
+                public void run() {
+
+                }
+            });
+
             String m = message.getContentDisplay();
 
             if (message.getAttachments().isEmpty()) {
@@ -328,6 +386,8 @@ public class Bot {
                     volume.run(m);
                 else if (queue.equalsInput(m))
                     queue.run(m);
+                else if (teams.equalsInput(m) && message.getMember().getPermissions(channel).contains(Permission.ADMINISTRATOR))
+                    teams.run(m);
                 else if (sleeping != null && sleeping == event.getTextChannel())
                     event.getMessage().delete().queue();
                 else return;
