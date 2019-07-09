@@ -3,17 +3,13 @@ package lui798.folkbot;
 import com.google.gson.JsonElement;
 import lui798.folkbot.command.Command;
 import lui798.folkbot.command.RunnableC;
-import lui798.folkbot.player.AudioPlayerMain;
-import lui798.folkbot.player.AudioPlayerSendHandler;
 import lui798.folkbot.util.CustomJSON;
 import lui798.folkbot.util.EncodingUtil;
 import lui798.folkbot.util.TwitchJSON;
-import lui798.folkbot.util.YouTubeHelper;
 import net.dv8tion.jda.core.*;
 import net.dv8tion.jda.core.entities.*;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.core.hooks.ListenerAdapter;
-import net.dv8tion.jda.core.managers.AudioManager;
 import net.dv8tion.jda.webhook.WebhookClient;
 import net.dv8tion.jda.webhook.WebhookMessageBuilder;
 import org.pircbotx.Configuration;
@@ -245,8 +241,6 @@ public class Bot extends ListenerAdapter {
 
     private Timer timer = new Timer();
     private boolean timerStarted = false;
-    private AudioManager manager = null;
-    private AudioPlayerMain playerMain = null;
 
     @Override
     public void onMessageReceived(MessageReceivedEvent event) {
@@ -258,7 +252,6 @@ public class Bot extends ListenerAdapter {
         Command user = new Command("user");
         Command clear = new Command("clear");
         Command screen = new Command("screen");
-        Command player = new Command("player");
 
         //------Live command------//
         live.setCom(new RunnableC() {
@@ -401,79 +394,6 @@ public class Bot extends ListenerAdapter {
                 }
             }
         });
-        //------Player command------//
-        player.setCom(new RunnableC() {
-            @Override
-            public void run(String argument) {
-                String source = "";
-                VoiceChannel voice = message.getGuild().getVoiceChannelById(
-                        message.getMember().getVoiceState().getChannel().getId());
-
-                if (argument.startsWith("play")) {
-                    if (!argument.equals("play")) {
-                        source = argument.substring(argument.indexOf(" ")+1);
-                    }
-                    else return;
-                    if (manager == null && playerMain == null) {
-                        playerMain = new AudioPlayerMain(channel);
-                        manager = message.getGuild().getAudioManager();
-                        manager.setSendingHandler(playerMain.getHandler());
-                        manager.openAudioConnection(voice);
-                    }
-                    playerMain.loadItem(new YouTubeHelper().testProcess(source));
-                }
-                else if (argument.startsWith("stop")) {
-                    if (playerMain != null) {
-                        playerMain.stopPlaying();
-                        channel.sendMessage(responseEmbed("Player Queue", "Cleared queue and left the voice channel.")).queue();
-                    }
-                    if (manager != null) {
-                        manager.closeAudioConnection();
-                        manager = null;
-                        playerMain = null;
-                    }
-                    timer.cancel();
-                }
-                else if (argument.startsWith("skip")) {
-                    if (playerMain != null) {
-                        playerMain.skipPlaying();
-                        channel.sendMessage(responseEmbed("Player Queue", "Skipped current song.")).queue();
-                    }
-                    else {
-                        channel.sendMessage(responseEmbed("Skip", "There is no song playing.")).queue();
-                    }
-                }
-                else if (argument.startsWith("volume")) {
-                    if (!argument.equals("volume")) {
-                        source = argument.substring(argument.indexOf(" ")+1);
-                    }
-                    else {
-                        channel.sendMessage(Bot.responseEmbed("Volume Level", "Volume set to " + playerMain.getVolume() + "%")).queue();
-                    }
-
-                    if (playerMain != null) {
-                        String vol = playerMain.setVolume(source);
-                        channel.sendMessage(responseEmbed("Volume Adjustment", "Volume set to " + vol + "%")).queue();
-                    }
-                    else {
-                        channel.sendMessage(responseEmbed("Volume Adjustment", "No songs are playing.")).queue();
-                    }
-                }
-                else if (argument.startsWith("queue")) {
-                    if (playerMain != null) {
-                        channel.sendMessage(responseEmbed("Player Queue", playerMain.getQueue())).queue();
-                    }
-                    else {
-                        channel.sendMessage(responseEmbed("Player Queue", "No songs are in the queue.")).queue();
-                    }
-                }
-            }
-
-            @Override
-            public void run() {
-
-            }
-        });
 
         //EmoteParser parser = new EmoteParser(config.getUser());
 
@@ -490,8 +410,6 @@ public class Bot extends ListenerAdapter {
                 clear.run(m);
             else if (screen.equalsInput(m))
                 screen.run(m);
-            else if (player.equalsInput(m))
-                player.run(m);
 //            else if (irc.isConnected() && message.getChannel().getId().equals(config.getProp("chatChannel")))
 //                ircBot.sendMessage(m, message.getAuthor().getName());
         }
