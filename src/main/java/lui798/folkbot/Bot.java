@@ -291,7 +291,7 @@ public class Bot extends ListenerAdapter {
             public void run(String argument) {
                 if (argument.equals("start")) {
                     message.delete().queue();
-                    if (!irc.isConnected()) {
+                    if (irc == null || !irc.isConnected()) {
                         chatLinkReady();
                         new Thread(() -> {
                             try {
