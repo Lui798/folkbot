@@ -314,16 +314,20 @@ public class Bot {
             teams.setCom(new RunnableC() {
                 @Override
                 public void run(String argument) {
-                    List<Member> members = new ArrayList<>();
-                    members.addAll(message.getGuild().getMembers());
+                    Role redTeamMember = guild.getJDA().getRolesByName("Red Team Member", true).get(0);
+                    Role blueTeamMember = guild.getJDA().getRolesByName("Blue Team Member", true).get(0);
+                    Role haloMember = guild.getJDA().getRolesByName("Member", true).get(0);
+
+                    List<Member> members = new ArrayList<>(message.getGuild().getMembers());
                     members.removeIf(m -> m.getUser().isBot());
 
                     if (argument.equals("assign")) {
+                        members.removeIf(m -> !m.getRoles().contains(haloMember));
+
                         for (Member member : members) {
-                            if (member.getRoles().contains(guild.getJDA().getRoleById("597209753470500866"))
-                                    || member.getRoles().contains(guild.getJDA().getRoleById("597209871393226762"))) {
-                                channel.sendMessage(responseEmbed("Error", "Teams are already assigned.\nPlease run "
-                                        + prefix + "teams clear first.", ERROR_COLOR)).queue();
+                            if (member.getRoles().contains(redTeamMember) || member.getRoles().contains(blueTeamMember)) {
+                                channel.sendMessage(responseEmbed("Error", "Teams are already assigned.\nPlease run **"
+                                        + prefix + "teams clear** first.", ERROR_COLOR)).queue();
                                 return;
                             }
                         }
@@ -334,29 +338,38 @@ public class Bot {
                         int numRed = members.size() / 2;
                         int n;
 
-                        for (int i = 0; i < numRed; i++) {
-                             n = r.nextInt(members.size());
-                            if (i > 0) {
-                                while (assigned.contains(members.get(n))) {
-                                    n = r.nextInt(members.size());
-                                }
-                            }
-                            guild.getController().addRolesToMember(members.get(n), guild.getJDA().getRoleById("597209753470500866")).queue();
-                            assigned.add(members.get(n));
-                        }
-                        for (int i = 0; i < members.size(); i++) {
+                        while (!members.isEmpty() && assigned.size() < numRed) {
                             n = r.nextInt(members.size());
-                            while (assigned.contains(members.get(n))) {
-                                n = r.nextInt(members.size());
-                            }
-                            guild.getController().addRolesToMember(members.get(n), guild.getJDA().getRoleById("597209871393226762")).queue();
-                            assigned.add(members.get(n));
+                            guild.getController().addRolesToMember(members.get(n), redTeamMember).complete();
+                            System.out.println("Added " + members.get(n).getEffectiveName() + " to red team.");
+                            assigned.add(members.remove(n));
                         }
+                        while (!members.isEmpty()) {
+                            n = r.nextInt(members.size());
+                            guild.getController().addRolesToMember(members.get(n), blueTeamMember).complete();
+                            System.out.println("Added " + members.get(n).getEffectiveName() + " to blue team.");
+                            assigned.add(members.remove(n));
+                        }
+
+                        String redString = "";
+                        String blueString = "";
+                        for (Member member : assigned) {
+                            if (member.getRoles().contains(redTeamMember))
+                                redString += member.getEffectiveName() + "\n";
+                            else if (member.getRoles().contains(blueTeamMember))
+                                blueString += member.getEffectiveName() + "\n";
+                        }
+
+                        channel.sendMessage(responseEmbed("Red Team Members", redString, 15158332)).queue();
+                        channel.sendMessage(responseEmbed("Blue Team Members", blueString, 3447003)).queue();
                     }
                     else if (argument.equals("clear")) {
+                        List<Role> roles = new ArrayList<>();
+                        roles.add(redTeamMember);
+                        roles.add(blueTeamMember);
+
                         for (Member member : members) {
-                            guild.getController().removeSingleRoleFromMember(member, guild.getJDA().getRoleById("597209753470500866")).queue();
-                            guild.getController().removeSingleRoleFromMember(member, guild.getJDA().getRoleById("597209871393226762")).queue();
+                            guild.getController().removeRolesFromMember(member, roles).queue();
                         }
                     }
                 }
