@@ -1,7 +1,6 @@
 # idea
 out
 build
-bin
 *.ipr
 *.iws
 *.iml
@@ -9,3 +8,4 @@ bin
 .idea
 .gradle
 *.conf
+*.exe
