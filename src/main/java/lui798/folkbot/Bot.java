@@ -122,6 +122,7 @@ public class Bot {
             Command queue = new Command("queue");
 
             Command teams = new Command("teams");
+            Command members = new Command("members");
 
             //------Clear command------//
             clear.setCom(new RunnableC() {
@@ -318,13 +319,13 @@ public class Bot {
                     Role blueTeamMember = guild.getJDA().getRolesByName("Blue Team Member", true).get(0);
                     Role haloMember = guild.getJDA().getRolesByName("Member", true).get(0);
 
-                    List<Member> members = new ArrayList<>(message.getGuild().getMembers());
-                    members.removeIf(m -> m.getUser().isBot());
+                    List<Member> guildMembers = new ArrayList<>(message.getGuild().getMembers());
+                    guildMembers.removeIf(m -> m.getUser().isBot());
 
                     if (argument.equals("assign")) {
-                        members.removeIf(m -> !m.getRoles().contains(haloMember));
+                        guildMembers.removeIf(m -> !m.getRoles().contains(haloMember));
 
-                        for (Member member : members) {
+                        for (Member member : guildMembers) {
                             if (member.getRoles().contains(redTeamMember) || member.getRoles().contains(blueTeamMember)) {
                                 channel.sendMessage(responseEmbed("Error", "Teams are already assigned.\nPlease run **"
                                         + prefix + "teams clear** first.", ERROR_COLOR)).queue();
@@ -335,20 +336,20 @@ public class Bot {
                         Random r = new Random();
                         List<Member> assigned = new ArrayList<>();
 
-                        int numRed = members.size() / 2;
+                        int numRed = guildMembers.size() / 2;
                         int n;
 
-                        while (!members.isEmpty() && assigned.size() < numRed) {
-                            n = r.nextInt(members.size());
-                            guild.getController().addRolesToMember(members.get(n), redTeamMember).complete();
-                            System.out.println("Added " + members.get(n).getEffectiveName() + " to red team.");
-                            assigned.add(members.remove(n));
+                        while (!guildMembers.isEmpty() && assigned.size() < numRed) {
+                            n = r.nextInt(guildMembers.size());
+                            guild.getController().addRolesToMember(guildMembers.get(n), redTeamMember).complete();
+                            System.out.println("Added " + guildMembers.get(n).getEffectiveName() + " to red team.");
+                            assigned.add(guildMembers.remove(n));
                         }
-                        while (!members.isEmpty()) {
-                            n = r.nextInt(members.size());
-                            guild.getController().addRolesToMember(members.get(n), blueTeamMember).complete();
-                            System.out.println("Added " + members.get(n).getEffectiveName() + " to blue team.");
-                            assigned.add(members.remove(n));
+                        while (!guildMembers.isEmpty()) {
+                            n = r.nextInt(guildMembers.size());
+                            guild.getController().addRolesToMember(guildMembers.get(n), blueTeamMember).complete();
+                            System.out.println("Added " + guildMembers.get(n).getEffectiveName() + " to blue team.");
+                            assigned.add(guildMembers.remove(n));
                         }
 
                         String redString = "";
@@ -368,7 +369,7 @@ public class Bot {
                         roles.add(redTeamMember);
                         roles.add(blueTeamMember);
 
-                        for (Member member : members) {
+                        for (Member member : guildMembers) {
                             guild.getController().removeRolesFromMember(member, roles).queue();
                         }
                     }
@@ -377,6 +378,35 @@ public class Bot {
                 @Override
                 public void run() {
 
+                }
+            });
+            members.setCom(new RunnableC() {
+                @Override
+                public void run(String argument) {
+                    Role haloMember = guild.getJDA().getRolesByName("Member", true).get(0);
+
+                    List<Member> members = new ArrayList<>(message.getGuild().getMembers());
+                    members.removeIf(m -> m.getUser().isBot());
+
+                    if (argument.startsWith("add")) {
+                        for (Member member : message.getMentionedMembers()) {
+                            guild.getController().addRolesToMember(member, haloMember).complete();
+                        }
+                    }
+                    else if (argument.equals("clear")) {
+                        List<Role> roles = new ArrayList<>();
+                        roles.add(haloMember);
+
+                        for (Member member : members) {
+                            guild.getController().removeRolesFromMember(member, roles).queue();
+                        }
+                    }
+                }
+
+                @Override
+                public void run() {
+                    channel.sendMessage(responseEmbed("Error", "Please specify an argument.\n"
+                            + prefix + "add <users> or " + prefix + "clear", ERROR_COLOR)).queue();
                 }
             });
 
@@ -401,6 +431,8 @@ public class Bot {
                     queue.run(m);
                 else if (teams.equalsInput(m) && message.getMember().getPermissions(channel).contains(Permission.ADMINISTRATOR))
                     teams.run(m);
+                else if (members.equalsInput(m) && message.getMember().getPermissions(channel).contains(Permission.ADMINISTRATOR))
+                    members.run(m);
                 else if (sleeping != null && sleeping == event.getTextChannel())
                     event.getMessage().delete().queue();
                 else return;

@@ -4,7 +4,7 @@ plugins {
 }
 
 group 'lui798'
-version 'v2.0.4-no_twitch'
+version 'v2.0.4-halo_server'
 
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
