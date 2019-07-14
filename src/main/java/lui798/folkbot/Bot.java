@@ -122,7 +122,8 @@ public class Bot {
             Command queue = new Command("queue");
 
             Command teams = new Command("teams");
-            Command members = new Command("members");
+            Command game = new Command("game");
+            Command register = new Command("register");
 
             //------Clear command------//
             clear.setCom(new RunnableC() {
@@ -315,9 +316,9 @@ public class Bot {
             teams.setCom(new RunnableC() {
                 @Override
                 public void run(String argument) {
-                    Role redTeamMember = guild.getJDA().getRolesByName("Red Team Member", true).get(0);
-                    Role blueTeamMember = guild.getJDA().getRolesByName("Blue Team Member", true).get(0);
-                    Role haloMember = guild.getJDA().getRolesByName("Member", true).get(0);
+                    Role redTeamMember = guild.getRolesByName("Red Team Member", true).get(0);
+                    Role blueTeamMember = guild.getRolesByName("Blue Team Member", true).get(0);
+                    Role haloMember = guild.getRolesByName("Halo Member", true).get(0);
 
                     List<Member> guildMembers = new ArrayList<>(message.getGuild().getMembers());
                     guildMembers.removeIf(m -> m.getUser().isBot());
@@ -380,33 +381,129 @@ public class Bot {
 
                 }
             });
-            members.setCom(new RunnableC() {
+            game.setCom(new RunnableC() {
                 @Override
                 public void run(String argument) {
-                    Role haloMember = guild.getJDA().getRolesByName("Member", true).get(0);
+                    final String G_PREFIX = "Game-";
+                    Role everyone = guild.getPublicRole();
 
-                    List<Member> members = new ArrayList<>(message.getGuild().getMembers());
-                    members.removeIf(m -> m.getUser().isBot());
+                    if (argument.startsWith("new")) {
+                        List<Permission> membrPerms = new ArrayList<>();
+                        List<Permission> adminPerms = new ArrayList<>();
 
-                    if (argument.startsWith("add")) {
-                        for (Member member : message.getMentionedMembers()) {
-                            guild.getController().addRolesToMember(member, haloMember).complete();
+                        int id = -1;
+                        for (int i = 0; i < 10; i++) {
+                            if (guild.getRolesByName(G_PREFIX + i, true).isEmpty()) {
+                                id = i;
+                                break;
+                            }
                         }
+                        if (id < 0)
+                            channel.sendMessage(responseEmbed("Error", "No empty game slots available", ERROR_COLOR)).queue();
+
+                        //Create chats and roles for new game
+                        guild.getController().createCategory(G_PREFIX + id).complete();
+                        Category category = guild.getCategoriesByName(G_PREFIX + id, true).get(0);
+                        Role admin = guild.getController().createRole().setName(G_PREFIX + id + "-admin").complete();
+                        Role member = guild.getController().createRole().setName(G_PREFIX + id).complete();
+                        Channel gen = category.createVoiceChannel(G_PREFIX + id).setUserlimit(16).complete();
+                        Channel red = category.createVoiceChannel("Red-" + id).setUserlimit(8).complete();
+                        Channel blue = category.createVoiceChannel("Blue-" + id).setUserlimit(8).complete();
+
+                        //Add permissions
+                        //Member perms
+                        membrPerms.add(Permission.VIEW_CHANNEL);
+                        membrPerms.add(Permission.VOICE_CONNECT);
+                        //Admin perms
+                        adminPerms.add(Permission.VOICE_MOVE_OTHERS);
+                        adminPerms.add(Permission.VOICE_DEAF_OTHERS);
+                        adminPerms.add(Permission.VOICE_MUTE_OTHERS);
+
+                        //Combine perms
+                        List<Permission> combined = new ArrayList<>();
+                        combined.addAll(membrPerms);
+                        combined.addAll(adminPerms);
+
+                        //Set perms on channels
+                        category.getManager()
+                                .putPermissionOverride(admin, combined, null)
+                                .putPermissionOverride(member, membrPerms, null)
+                                .putPermissionOverride(everyone, null, membrPerms).complete();
+                        red.getManager().sync().complete();
+                        blue.getManager().sync().complete();
+                        gen.getManager().sync().complete();
+
+                        //Set roles on game members
+                        guild.getController().addSingleRoleToMember(message.getMember(), admin).queue();
+                        for (Member m : message.getMentionedMembers()) {
+                            guild.getController().addSingleRoleToMember(m, member).queue();
+                        }
+
+                        channel.sendMessage(responseEmbed("Success", "Your new game has been created with\nid `"
+                                + id + "`, please find your new channel.", EMBED_COLOR)).queue();
                     }
-                    else if (argument.equals("clear")) {
-                        List<Role> roles = new ArrayList<>();
-                        roles.add(haloMember);
+                    else if (argument.startsWith("end")) {
+                        Role admin = null;
+                        Role member = null;
 
-                        for (Member member : members) {
-                            guild.getController().removeRolesFromMember(member, roles).queue();
+                        int id = -1;
+                        for (int i = 0; i < 10; i++) {
+                            if (!guild.getRolesByName(G_PREFIX + i + "-admin", true).isEmpty())
+                            if (message.getMember().getRoles().contains(guild.getRolesByName(G_PREFIX + i + "-admin", true).get(0))) {
+                                id = i;
+                                admin = guild.getRolesByName(G_PREFIX + id + "-admin", true).get(0);
+                                member = guild.getRolesByName(G_PREFIX + id, true).get(0);
+                                break;
+                            }
                         }
+                        if (id < 0) {
+                            channel.sendMessage(responseEmbed("Error", "You are not an admin of a game.", ERROR_COLOR)).queue();
+                            return;
+                        }
+
+                        admin.delete().queue();
+                        member.delete().queue();
+
+                        guild.getVoiceChannelsByName(G_PREFIX + id, true).get(0).delete().complete();
+                        guild.getVoiceChannelsByName("Red-" + id, true).get(0).delete().complete();
+                        guild.getVoiceChannelsByName("Blue-" + id, true).get(0).delete().complete();
+                        guild.getCategoriesByName(G_PREFIX + id, true).get(0).delete().complete();
                     }
                 }
 
                 @Override
                 public void run() {
                     channel.sendMessage(responseEmbed("Error", "Please specify an argument.\n"
-                            + prefix + "add <users> or " + prefix + "clear", ERROR_COLOR)).queue();
+                            + prefix + "game <arg>", ERROR_COLOR)).queue();
+                }
+            });
+            register.setCom(new RunnableC() {
+                @Override
+                public void run(String argument) {
+                    Role banned = guild.getRolesByName("Banned", true).get(0);
+                    Role haloMember = guild.getRolesByName("Halo Member", true).get(0);
+
+                    if (argument.equals("halo")) {
+                        if (message.getMember().getRoles().contains(banned)) {
+                            channel.sendMessage(responseEmbed("Error", "Cannot give role, you are banned.", ERROR_COLOR)).queue();
+                            return;
+                        }
+                        else if (message.getMember().getRoles().contains(haloMember)) {
+                            channel.sendMessage(responseEmbed("Error", "Cannot give role, you are already \na halo member.", ERROR_COLOR)).queue();
+                            return;
+                        }
+                        List<Role> roles = new ArrayList<>();
+                        roles.add(haloMember);
+
+                        guild.getController().addRolesToMember(message.getMember(), roles).complete();
+                        channel.sendMessage(responseEmbed("Success", message.getMember().getEffectiveName() + " is now a Halo Member.", EMBED_COLOR)).queue();
+                    }
+                }
+
+                @Override
+                public void run() {
+                    channel.sendMessage(responseEmbed("Error", "Please specify an argument.\n"
+                            + prefix + "register <role>", ERROR_COLOR)).queue();
                 }
             });
 
@@ -429,10 +526,12 @@ public class Bot {
                     volume.run(m);
                 else if (queue.equalsInput(m))
                     queue.run(m);
-                else if (teams.equalsInput(m) && message.getMember().getPermissions(channel).contains(Permission.ADMINISTRATOR))
-                    teams.run(m);
-                else if (members.equalsInput(m) && message.getMember().getPermissions(channel).contains(Permission.ADMINISTRATOR))
-                    members.run(m);
+                //else if (teams.equalsInput(m) && message.getMember().getPermissions(channel).contains(Permission.ADMINISTRATOR))
+                //    teams.run(m);
+                else if (game.equalsInput(m))
+                    game.run(m);
+                else if (register.equalsInput(m))
+                    register.run(m);
                 else if (sleeping != null && sleeping == event.getTextChannel())
                     event.getMessage().delete().queue();
                 else return;
