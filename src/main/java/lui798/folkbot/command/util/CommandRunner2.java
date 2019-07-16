@@ -1,6 +1,7 @@
 package lui798.folkbot.command.util;
 
 import lui798.folkbot.command.*;
+import lui798.folkbot.command.player.*;
 import net.dv8tion.jda.core.entities.Message;
 
 import java.util.ArrayList;
@@ -11,7 +12,12 @@ public class CommandRunner2 {
     private final List<Command> COMMANDS = new ArrayList<>();
 
     public CommandRunner2() {
-        COMMANDS.add(new CommandClear());
+        COMMANDS.add(new ClearCommand());
+        COMMANDS.add(new ScreenCommand());
+        COMMANDS.add(new PlayCommand());
+        COMMANDS.add(new StopCommand());
+        COMMANDS.add(new VolumeCommand());
+        COMMANDS.add(new QueueCommand());
     }
 
     private Command getCommand(String command) {
@@ -33,11 +39,14 @@ public class CommandRunner2 {
         CommandResult result;
 
         try {
-            result = getCommand(command).run(message, parts);
+            if (getCommand(command).hasPermission(message))
+                result = getCommand(command).run(message, parts);
+            else
+                result = new CommandResult(CommandResult.ERROR, "You don't have permission to\nrun that command.");
         }
         catch (NullPointerException e) {
             e.printStackTrace();
-            result = new CommandResult(CommandResult.ERROR, "That didn't work.");
+            result = new CommandResult(CommandResult.ERROR, "That didn't work.", CommandResult.ERROR_COLOR);
         }
 
         return result;

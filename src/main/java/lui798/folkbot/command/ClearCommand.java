@@ -2,17 +2,20 @@ package lui798.folkbot.command;
 
 import lui798.folkbot.Bot;
 import lui798.folkbot.command.util.CommandResult;
+import net.dv8tion.jda.core.Permission;
 import net.dv8tion.jda.core.entities.Message;
 import net.dv8tion.jda.core.entities.TextChannel;
 
 import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
+import java.util.Arrays;
 import java.util.List;
 
-public class CommandClear extends Command {
+public class ClearCommand extends Command {
 
-    public CommandClear() {
+    public ClearCommand() {
         setName("clear");
+        setPerms(Arrays.asList(Permission.MESSAGE_MANAGE));
     }
 
     @Override

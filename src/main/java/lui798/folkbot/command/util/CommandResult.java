@@ -5,7 +5,8 @@ public class CommandResult {
     private String desc;
     private int color;
 
-    private static final int DEFAULT_COLOR = 7506394;
+    public static final int DEFAULT_COLOR = 7506394;
+    public static final int ERROR_COLOR = 14696512;
 
     public static String ERROR = "Error";
     public static String SUCCESS = "Success";

@@ -8,6 +8,7 @@ import com.sedmelluq.discord.lavaplayer.track.AudioPlaylist;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrackInfo;
 import lui798.folkbot.Bot;
+import lui798.folkbot.command.util.CommandResult;
 import lui798.folkbot.util.YouTubeHelper;
 import net.dv8tion.jda.core.entities.MessageEmbed;
 
@@ -60,9 +61,9 @@ public class AudioPlayerMain {
     }
 
     private AudioTrack yt;
-    private MessageEmbed response;
+    private CommandResult response;
 
-    public MessageEmbed loadItem(String id) {
+    public CommandResult loadItem(String id) {
         String url;
         response = null;
 
@@ -80,7 +81,7 @@ public class AudioPlayerMain {
         }
 
         if (yt == null && !YouTubeHelper.isValidUrl(url)) {
-            response = Bot.responseEmbed("No Match Found", "No song was found for that link", Bot.ERROR_COLOR);
+            response = new CommandResult("No Match Found", "No song was found for that link", CommandResult.ERROR_COLOR);
             return response;
         }
 
@@ -106,13 +107,13 @@ public class AudioPlayerMain {
 
             @Override
             public void noMatches() {
-                response = Bot.responseEmbed("No Match Found", "No song was found for that link", Bot.ERROR_COLOR);
+                response = new CommandResult("No Match Found", "No song was found for that link", CommandResult.ERROR_COLOR);
             }
 
             @Override
             public void loadFailed(FriendlyException exception) {
                 if (exception.severity == FriendlyException.Severity.COMMON) {
-                    response = Bot.responseEmbed("Loading Error", exception.getMessage(), Bot.ERROR_COLOR);
+                    response = new CommandResult("Loading Error", exception.getMessage(), CommandResult.ERROR_COLOR);
                 }
             }
         });
@@ -132,7 +133,7 @@ public class AudioPlayerMain {
         return Integer.toString(player.getVolume());
     }
 
-    public MessageEmbed setVolume(String level) {
+    public CommandResult setVolume(String level) {
         int level2;
         try {
             if (level.equals("default") || level.equals("normal")) {
@@ -152,11 +153,11 @@ public class AudioPlayerMain {
             }
         }
         catch (NumberFormatException e) {
-            response = Bot.responseEmbed("Volume Error", "Please type a valid number 0-100.", Bot.ERROR_COLOR);
+            response = new CommandResult("Volume Error", "Please type a valid number 0-100.", CommandResult.ERROR_COLOR);
             return response;
         }
         player.setVolume(level2);
-        response = Bot.responseEmbed("Volume Adjustment", "Volume set to " + level2 + "%", Bot.EMBED_COLOR);
+        response = new CommandResult("Volume Adjustment", "Volume set to " + level2 + "%", CommandResult.DEFAULT_COLOR);
 
         return response;
     }
