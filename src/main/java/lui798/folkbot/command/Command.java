@@ -1,56 +1,20 @@
 package lui798.folkbot.command;
 
-import lui798.folkbot.Bot;
+import lui798.folkbot.command.util.CommandResult;
+import net.dv8tion.jda.core.entities.Message;
 
-public class Command {
+import java.util.List;
 
+public abstract class Command {
     private String name;
-    private RunnableC com;
 
-    public Command(String name) {
-        this.name = name;
-    }
-
-    public void setCom(RunnableC com) {
-        this.com = com;
-    }
+    public abstract CommandResult run(Message message, List<String> arguments);
 
     public String getName() {
-        return name;
+        return this.name;
     }
 
-    private String getArgument(String input) {
-        String result;
-        try {
-            result = input.substring(input.indexOf(" "));
-            result = input.substring(input.indexOf(" ")+1);
-        }
-        catch (StringIndexOutOfBoundsException e) {
-            result = null;
-        }
-        return result;
-    }
-
-    public boolean equalsInput(String input) {
-        if (getArgument(input) == null) {
-            if (input.equals(Bot.prefix + name))
-                return true;
-        }
-        else {
-            if (input.substring(0, input.indexOf(" ")).equals(Bot.prefix + name))
-                return true;
-        }
-        return false;
-    }
-
-    public void run(String input) {
-        new Thread(() -> {
-            if (getArgument(input) == null) {
-                com.run();
-            }
-            else {
-                com.run(getArgument(input));
-            }
-        }).start();
+    public void setName(String name) {
+        this.name = name;
     }
 }
