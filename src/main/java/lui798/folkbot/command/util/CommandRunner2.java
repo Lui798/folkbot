@@ -1,6 +1,7 @@
 package lui798.folkbot.command.util;
 
 import lui798.folkbot.command.*;
+import lui798.folkbot.command.halo.*;
 import lui798.folkbot.command.player.*;
 import net.dv8tion.jda.core.entities.Message;
 
@@ -12,12 +13,18 @@ public class CommandRunner2 {
     private final List<Command> COMMANDS = new ArrayList<>();
 
     public CommandRunner2() {
+        //NORMAL COMMANDS
         COMMANDS.add(new ClearCommand());
         COMMANDS.add(new ScreenCommand());
+
+        //PLAYER COMMANDS
         COMMANDS.add(new PlayCommand());
         COMMANDS.add(new StopCommand());
         COMMANDS.add(new VolumeCommand());
         COMMANDS.add(new QueueCommand());
+
+        //HALO COMMANDS
+        COMMANDS.add(new GameCommand());
     }
 
     private Command getCommand(String command) {
