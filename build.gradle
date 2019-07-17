@@ -4,7 +4,7 @@ plugins {
 }
 
 group 'lui798'
-version 'v3.0.0-no_twitch-SNAPSHOT'
+version 'v3.0.0-SNAPSHOT'
 
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
