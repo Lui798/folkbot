@@ -69,7 +69,7 @@ public class BotListener extends ListenerAdapter {
     public void onGuildMemberJoin(GuildMemberJoinEvent event) {
         if (!event.getGuild().getId().equals(guild.getId()) || event.getUser().isBot()) return;
 
-        if (!Bot.config.getProp("joinRoles").equals("default") && !Bot.config.getProp("joinGuilds").equals("default")) {
+        if (!Bot.config.getProp("joinRoles").equals("unchanged") && !Bot.config.getProp("joinGuilds").equals("unchanged")) {
 
             ArrayList<Guild> guilds = new ArrayList<>();
             ArrayList<Role> roles = new ArrayList<>();

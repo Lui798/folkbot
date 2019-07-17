@@ -4,6 +4,8 @@ import lui798.folkbot.util.Config;
 import lui798.folkbot.util.DependencyFile;
 import net.dv8tion.jda.core.*;
 import net.dv8tion.jda.core.entities.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.security.auth.login.LoginException;
 import java.io.File;
@@ -14,6 +16,7 @@ public class Bot {
     public static String prefix;
     public static Config config;
     private static JDA jda;
+    private static Logger log = LoggerFactory.getLogger(Bot.class);
 
     //Live notification settings
     public static final int ERROR_COLOR = 14696512;

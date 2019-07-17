@@ -64,9 +64,10 @@ public class Config {
 
     private void setDefaultValues() {
         prop.setProperty("prefix", "$");
-        prop.setProperty("discordToken", "default");
-        prop.setProperty("joinRoles", "default");
-        prop.setProperty("joinGuilds", "default");
+        prop.setProperty("discordToken", "unchanged");
+        prop.setProperty("joinRoles", "unchanged");
+        prop.setProperty("joinGuilds", "unchanged");
+        prop.setProperty("haloRcon", "unchanged");
 
         saveValues();
     }
