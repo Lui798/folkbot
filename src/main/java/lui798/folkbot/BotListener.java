@@ -4,6 +4,7 @@ import lui798.folkbot.command.player.PlayerCommand;
 import lui798.folkbot.command.util.CommandResult;
 import lui798.folkbot.command.util.CommandRunner2;
 import net.dv8tion.jda.core.entities.*;
+import net.dv8tion.jda.core.events.guild.member.GuildMemberJoinEvent;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.core.events.message.react.MessageReactionAddEvent;
 import net.dv8tion.jda.core.hooks.ListenerAdapter;
@@ -60,5 +61,10 @@ public class BotListener extends ListenerAdapter {
 //            if (play.equalsInput(m))
 //                play.run(m + " " + message.getAttachments().get(0).getUrl());
 //        }
+    }
+
+    @Override
+    public void onGuildMemberJoin(GuildMemberJoinEvent event) {
+
     }
 }
