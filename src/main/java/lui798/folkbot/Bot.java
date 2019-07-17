@@ -20,7 +20,7 @@ public class Bot {
     public static final int EMBED_COLOR = 7506394;
 
     public static void main(String[] args) throws Exception {
-        new DependencyFile(new URL("https://yt-dl.org/downloads/2019.06.27/youtube-dl.exe"),
+        new DependencyFile(new URL("https://yt-dl.org/downloads/latest/youtube-dl.exe"),
                 System.getProperty("user.dir") + File.separator + "bin", "youtube-dl.exe");
 
         config = new Config();
