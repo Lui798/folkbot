@@ -9,6 +9,8 @@ import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.core.events.message.react.MessageReactionAddEvent;
 import net.dv8tion.jda.core.hooks.ListenerAdapter;
 
+import java.util.ArrayList;
+
 import static lui798.folkbot.command.player.PlayerCommand.queueMessage;
 import static lui798.folkbot.command.player.PlayerCommand.numbers;
 
@@ -65,6 +67,23 @@ public class BotListener extends ListenerAdapter {
 
     @Override
     public void onGuildMemberJoin(GuildMemberJoinEvent event) {
+        if (!Bot.config.getProp("joinRoles").equals("default") && !Bot.config.getProp("joinGuilds").equals("default")) {
 
+            ArrayList<Guild> guilds = new ArrayList<>();
+            ArrayList<Role> roles = new ArrayList<>();
+
+            for (String s : Bot.config.getList("joinGuilds")) {
+                guilds.add(event.getJDA().getGuildById(s));
+            }
+
+            if (guilds.contains(guild)) {
+                for (String s : Bot.config.getList("joinRoles")) {
+                    roles.add(guild.getRolesByName(s, false).get(0));
+                }
+
+                guild.getController().addRolesToMember(event.getMember(), roles).queue();
+                System.out.println("Assigned roles to new member " + event.getMember().getEffectiveName() + " in Guild " + event.getGuild().getName());
+            }
+        }
     }
 }
