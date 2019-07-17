@@ -1,6 +1,8 @@
 package lui798.folkbot.util;
 
 import java.io.*;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Properties;
 
 public class Config {
@@ -14,16 +16,12 @@ public class Config {
         emptyFile();
     }
 
-    public String getToken() {
-        return getProp("discordToken");
-    }
-
-    public String getPrefix() {
-        return getProp("prefix");
-    }
-
     public String getProp(String key) {
         return prop.getProperty(key);
+    }
+
+    public List<String> getList(String key) {
+        return Arrays.asList(prop.getProperty(key).split("\\s*,\\s*"));
     }
 
     private void noFile() {
@@ -65,8 +63,10 @@ public class Config {
     }
 
     private void setDefaultValues() {
-        prop.setProperty("prefix", "?");
-        prop.setProperty("discordToken", "bot-token-here");
+        prop.setProperty("prefix", "$");
+        prop.setProperty("discordToken", "default");
+        prop.setProperty("joinRoles", "default");
+        prop.setProperty("joinGuilds", "default");
 
         saveValues();
     }

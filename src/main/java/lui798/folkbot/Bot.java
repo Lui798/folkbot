@@ -12,6 +12,7 @@ import java.net.URL;
 
 public class Bot {
     public static String prefix;
+    public static Config config;
     private static JDA jda;
 
     //Live notification settings
@@ -22,11 +23,11 @@ public class Bot {
         new DependencyFile(new URL("https://yt-dl.org/downloads/2019.06.27/youtube-dl.exe"),
                 System.getProperty("user.dir") + File.separator + "bin", "youtube-dl.exe");
 
-        Config config = new Config();
-        prefix = config.getPrefix();
+        config = new Config();
+        prefix = config.getProp("prefix");
         JDABuilder builder = new JDABuilder(AccountType.BOT);
 
-        builder.setToken(config.getToken());
+        builder.setToken(config.getProp("discordToken"));
         new Bot(builder);
     }
 

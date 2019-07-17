@@ -12,8 +12,11 @@ public class CommandRunner2 {
     private final List<Command> COMMANDS = new ArrayList<>();
 
     public CommandRunner2() {
+        //NORMAL COMMANDS
         COMMANDS.add(new ClearCommand());
         COMMANDS.add(new ScreenCommand());
+
+        //PLAYER COMMANDS
         COMMANDS.add(new PlayCommand());
         COMMANDS.add(new StopCommand());
         COMMANDS.add(new VolumeCommand());
