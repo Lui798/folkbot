@@ -1,8 +1,8 @@
 package lui798.folkbot;
 
-import lui798.folkbot.command.player.PlayerCommand;
 import lui798.folkbot.command.util.CommandResult;
 import lui798.folkbot.command.util.CommandRunner2;
+import lui798.folkbot.player.AudioPlayerMain;
 import net.dv8tion.jda.core.entities.*;
 import net.dv8tion.jda.core.events.guild.member.GuildMemberJoinEvent;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
@@ -11,29 +11,31 @@ import net.dv8tion.jda.core.hooks.ListenerAdapter;
 
 import java.util.ArrayList;
 
-import static lui798.folkbot.command.player.PlayerCommand.queueMessage;
 import static lui798.folkbot.command.player.PlayerCommand.numbers;
 
 public class BotListener extends ListenerAdapter {
     private Guild guild;
+    private CommandRunner2 runner;
 
     public BotListener(Guild guild) {
         this.guild = guild;
+        this.runner = new CommandRunner2(guild);
     }
-
-    private CommandRunner2 runner = new CommandRunner2();
 
     @Override
     public void onMessageReactionAdd(MessageReactionAddEvent event) {
         if (!event.getGuild().getId().equals(guild.getId())) return;
 
+        Message queueMessage = runner.getPlayerController().getQueueMessage();
+        AudioPlayerMain playerMain = runner.getPlayerController().getPlayerMain();
+
         if (!event.getUser().isBot() && event.getMessageId().equals(queueMessage.getId())) {
             int index = Integer.parseInt(event.getReactionEmote().getName().substring(0, 1)) - 1;
-            PlayerCommand.playerMain.getScheduler().play(index);
+            playerMain.getScheduler().play(index);
 
             queueMessage.clearReactions().queue();
-            queueMessage.editMessage(Bot.responseEmbed("Player Queue", PlayerCommand.playerMain.getQueue(), Bot.EMBED_COLOR)).queue();
-            for (int i = 1; i < PlayerCommand.playerMain.getScheduler().getQueue().size() && i < 5; i++) {
+            queueMessage.editMessage(Bot.responseEmbed("Player Queue", playerMain.getQueue(), Bot.EMBED_COLOR)).queue();
+            for (int i = 1; i < playerMain.getScheduler().getQueue().size() && i < 9; i++) {
                 queueMessage.addReaction(numbers[i + 1]).queue();
             }
         }

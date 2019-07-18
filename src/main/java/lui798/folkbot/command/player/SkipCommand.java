@@ -1,30 +1,30 @@
 package lui798.folkbot.command.player;
 
 import lui798.folkbot.command.util.CommandResult;
+import lui798.folkbot.player.PlayerController;
 import net.dv8tion.jda.core.entities.Message;
 
 import java.util.List;
 
 public class SkipCommand extends PlayerCommand {
 
-    public SkipCommand() {
+    public SkipCommand(PlayerController controller) {
+        super(controller);
         setName("skip");
         setPerms(null);
     }
 
     @Override
     public CommandResult run(Message message, List<String> arguments) {
-        CommandResult result = null;
+        CommandResult result;
 
-        if (queueMessage != null) {
-            queueMessage.clearReactions().queue();
-            queueMessage = null;
-        }
+        clearQueueMessage();
 
-        if (playerMain != null) {
-            playerMain.skipPlaying();
+        if (getController().getPlayerMain().isPlaying()) {
+            getController().getPlayerMain().skipPlaying();
             result = new CommandResult("Player Queue", "Skipped current song.", CommandResult.DEFAULT_COLOR);
-        } else {
+        }
+        else {
             result = new CommandResult("Skip", "There is no song playing.", CommandResult.ERROR_COLOR);
         }
 

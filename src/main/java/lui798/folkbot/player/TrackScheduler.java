@@ -56,6 +56,10 @@ public class TrackScheduler extends AudioEventAdapter {
         }
     }
 
+    public AudioTrack getPlaying() {
+        return player.getPlayingTrack();
+    }
+
     @Override
     public void onPlayerPause(AudioPlayer player) {
         // Player was paused
