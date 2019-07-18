@@ -46,7 +46,7 @@ public class AudioPlayerMain {
         String output = "";
 
         if (!scheduler.getQueue().isEmpty()) {
-            for (int i = 0; i < scheduler.getQueue().size() && i < 5; i++) {
+            for (int i = 0; i < scheduler.getQueue().size() && i < 9; i++) {
                 AudioTrack track = scheduler.getQueue().get(i);
                 AudioTrackInfo info = (AudioTrackInfo) track.getUserData();
                 output += i+1 + "). [" + info.author + " - " + info.title + "](" + info.uri + ")\n";
@@ -127,6 +127,10 @@ public class AudioPlayerMain {
 
     public void skipPlaying() {
         scheduler.skip();
+    }
+
+    public boolean isPlaying() {
+        return scheduler.getPlaying() != null;
     }
 
     public String getVolume() {

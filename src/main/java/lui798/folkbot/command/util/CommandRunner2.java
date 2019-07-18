@@ -3,6 +3,8 @@ package lui798.folkbot.command.util;
 import lui798.folkbot.command.*;
 import lui798.folkbot.command.halo.*;
 import lui798.folkbot.command.player.*;
+import lui798.folkbot.player.PlayerController;
+import net.dv8tion.jda.core.entities.Guild;
 import net.dv8tion.jda.core.entities.Message;
 
 import java.util.ArrayList;
@@ -11,20 +13,28 @@ import java.util.List;
 
 public class CommandRunner2 {
     private final List<Command> COMMANDS = new ArrayList<>();
+    private PlayerController playerController;
 
-    public CommandRunner2() {
+    public CommandRunner2(Guild guild) {
+        playerController = new PlayerController(guild);
+
         //NORMAL COMMANDS
         COMMANDS.add(new ClearCommand());
         COMMANDS.add(new ScreenCommand());
 
         //PLAYER COMMANDS
-        COMMANDS.add(new PlayCommand());
-        COMMANDS.add(new StopCommand());
-        COMMANDS.add(new VolumeCommand());
-        COMMANDS.add(new QueueCommand());
+        COMMANDS.add(new PlayCommand(playerController));
+        COMMANDS.add(new StopCommand(playerController));
+        COMMANDS.add(new SkipCommand(playerController));
+        COMMANDS.add(new VolumeCommand(playerController));
+        COMMANDS.add(new QueueCommand(playerController));
 
         //HALO COMMANDS
         COMMANDS.add(new GameCommand());
+    }
+
+    public PlayerController getPlayerController() {
+        return playerController;
     }
 
     private Command getCommand(String command) {
