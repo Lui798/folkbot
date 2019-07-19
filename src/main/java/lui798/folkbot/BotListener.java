@@ -2,7 +2,9 @@ package lui798.folkbot;
 
 import lui798.folkbot.command.util.CommandResult;
 import lui798.folkbot.command.util.CommandRunner2;
+import lui798.folkbot.halo.ServerConnection;
 import lui798.folkbot.player.AudioPlayerMain;
+import lui798.folkbot.util.Config;
 import net.dv8tion.jda.core.entities.*;
 import net.dv8tion.jda.core.events.guild.member.GuildMemberJoinEvent;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
@@ -15,11 +17,19 @@ import static lui798.folkbot.command.player.PlayerCommand.numbers;
 
 public class BotListener extends ListenerAdapter {
     private Guild guild;
+    private Config config;
     private CommandRunner2 runner;
+    private ServerConnection server;
 
-    public BotListener(Guild guild) {
+    public BotListener(Guild guild, Config config) {
         this.guild = guild;
+        this.config = config;
         this.runner = new CommandRunner2(guild);
+
+        if (guild.getTextChannels().contains(guild.getJDA().getTextChannelById(config.getProp("rconChat")))) {
+            server = new ServerConnection(this.config.getProp("serverIP"), this.config.getProp("rconPort"), this.config.getProp("gamePort"),
+                    this.config.getProp("rconPass"), guild.getTextChannelById(this.config.getProp("rconChat")));
+        }
     }
 
     @Override

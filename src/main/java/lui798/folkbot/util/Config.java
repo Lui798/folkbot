@@ -6,14 +6,20 @@ import java.util.List;
 import java.util.Properties;
 
 public class Config {
-    private final String FILE_NAME = "folkbot.conf";
+    private final String FILE_NAME;
     private Properties prop;
 
-    public Config() {
+    public Config(String filename) {
+        FILE_NAME = filename;
         prop = new Properties();
         noFile();
         loadValues();
         emptyFile();
+    }
+
+    public void setProp(String key, String value) {
+        prop.setProperty(key, value);
+        saveValues();
     }
 
     public String getProp(String key) {
@@ -67,7 +73,11 @@ public class Config {
         prop.setProperty("discordToken", "unchanged");
         prop.setProperty("joinRoles", "unchanged");
         prop.setProperty("joinGuilds", "unchanged");
-        prop.setProperty("haloRcon", "unchanged");
+        prop.setProperty("rconChat", "unchanged");
+        prop.setProperty("serverIP", "unchanged");
+        prop.setProperty("rconPort", "unchanged");
+        prop.setProperty("gamePort", "unchanged");
+        prop.setProperty("rconPass", "unchanged");
 
         saveValues();
     }
