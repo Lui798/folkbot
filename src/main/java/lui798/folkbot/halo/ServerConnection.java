@@ -7,7 +7,7 @@ import lui798.folkbot.halo.object.ChatMessage;
 import lui798.folkbot.halo.object.Player;
 import lui798.folkbot.halo.object.ServerInfo;
 import lui798.folkbot.halo.util.Convert;
-import lui798.folkbot.halo.util.PlayerList;
+import lui798.folkbot.halo.object.PlayerList;
 import lui798.folkbot.halo.util.RegexParser;
 import lui798.folkbot.halo.util.TimedCommand;
 import lui798.folkbot.util.json.JsonThing;
@@ -32,13 +32,14 @@ public class ServerConnection extends WebSocketClient {
     private List<TimedCommand> timedCommands;
     private PlayerList oldPlayers = null;
     private PlayerList players;
+    private List<String> admins;
     private JsonThing serverJson;
     private ServerInfo serverInfo;
     private TextChannel channel;
     private String password;
     private String lastStatus = null;
 
-    public ServerConnection(String ip, String rconPort, String gamePort, String password, TextChannel channel) {
+    public ServerConnection(String ip, String rconPort, String gamePort, String password, TextChannel channel, List<String> admins) {
         super(URI.create("ws://" + ip + ":" + rconPort), new Draft_6455(Collections.emptyList(), Collections.singletonList(new Protocol("dew-rcon"))));
 
         String address = "http://" + ip + ":" + gamePort;
@@ -46,6 +47,8 @@ public class ServerConnection extends WebSocketClient {
         this.channel = channel;
         this.update = new Timer();
         this.timedCommands = new ArrayList<>();
+        this.admins = admins;
+
         try {
             this.serverJson = new JsonThing(address);
         }
@@ -116,11 +119,13 @@ public class ServerConnection extends WebSocketClient {
         else {
             for (Player p : players) {
                 if (!listContainsPlayer(oldPlayers, p))
-                    onJoin(p);
+                    if (!p.name.equals("") || !p.uid.equals("0000000000000000"))
+                        onJoin(p);
             }
             for (Player p : oldPlayers) {
                 if (!listContainsPlayer(players, p))
-                    onLeave(p);
+                    if (!p.name.equals("") || !p.uid.equals("0000000000000000"))
+                        onLeave(p);
             }
         }
 
@@ -152,10 +157,11 @@ public class ServerConnection extends WebSocketClient {
                     if (players.find(c.name).ip == null)
                         players.find(c.name).ip = c.ip;
 
-                    if (c.message.startsWith(PREFIX + "help")) {
+                    if (c.message.toLowerCase().startsWith(PREFIX + "help")) {
                         sendPM(c.name, "!report <name> - Reports specified player to the admins.");
                         sendPM(c.name, "!discord - Sends you a link to our discord.");
-                    } else if (c.message.startsWith(PREFIX + "report")) {
+                    }
+                    else if (c.message.toLowerCase().startsWith(PREFIX + "report")) {
                         String[] split = c.message.split(" ", 2);
                         if (split.length < 2)
                             sendPM(c.name, "Please type the command like this: !report name");
@@ -165,6 +171,21 @@ public class ServerConnection extends WebSocketClient {
                                     "\nIP - " + p.ip + "\nUID - " + p.uid, 14696512));
                             sendPM(c.name, "Player successfully reported.");
                         }
+                    }
+                    else if (c.message.toLowerCase().startsWith(PREFIX + "discord")) {
+                        sendPM(c.name, "@" + c.name + ", here's your invite: https://discord.gg/HpNBESJ");
+                    }
+                    else if (c.message.toLowerCase().startsWith(PREFIX + "endgame") && admins.contains(c.uid)) {
+                        send("Game.End");
+                        log.info(c.name + " ended the game.");
+                    }
+                    else if (c.message.toLowerCase().startsWith(PREFIX + "shuffleteams") && admins.contains(c.uid)) {
+                        send("Server.ShuffleTeams");
+                    }
+                    else if (c.message.toLowerCase().startsWith(PREFIX + "kick") && admins.contains(c.uid)) {
+                        String[] split = c.message.split(" ", 2);
+                        if (split.length > 1)
+                            send("Server.KickPlayer " + split[1]);
                     }
                     if (!c.message.startsWith(PREFIX + "report")) {
                         sendToDiscord(embedMessage(c.name, c.message, Convert.hex2Rgb(players.find(c.name).primaryColor)));
