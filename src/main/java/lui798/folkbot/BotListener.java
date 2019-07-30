@@ -24,12 +24,13 @@ public class BotListener extends ListenerAdapter {
 
     @Override
     public void onMessageReactionAdd(MessageReactionAddEvent event) {
-        if (!event.getGuild().getId().equals(guild.getId())) return;
+        if (!event.getGuild().getId().equals(guild.getId()) || event.getUser().isBot()) return;
+        if (runner.getPlayerController().getQueueMessage() == null) return;
 
         Message queueMessage = runner.getPlayerController().getQueueMessage();
         AudioPlayerMain playerMain = runner.getPlayerController().getPlayerMain();
 
-        if (!event.getUser().isBot() && event.getMessageId().equals(queueMessage.getId())) {
+        if (event.getMessageId().equals(queueMessage.getId())) {
             int index = Integer.parseInt(event.getReactionEmote().getName().substring(0, 1)) - 1;
             playerMain.getScheduler().play(index);
 
