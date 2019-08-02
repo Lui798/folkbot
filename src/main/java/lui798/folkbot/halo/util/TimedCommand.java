@@ -11,10 +11,24 @@ public class TimedCommand {
     private Timer timer;
     private TimerTask task;
     private int period;
+    private List<String> commands;
+    private ServerConnection server;
 
     public TimedCommand(ServerConnection server, List<String> commands, int period) {
-        this.timer = new Timer();
-        this.task = new TimerTask() {
+        this.server = server;
+        this.period = period;
+        this.commands = commands;
+    }
+
+    public void stop() {
+        timer.cancel();
+        timer = null;
+        task = null;
+    }
+
+    public void start() {
+        timer = new Timer();
+        task = new TimerTask() {
             @Override
             public void run() {
                 for (String c : commands) {
@@ -22,14 +36,6 @@ public class TimedCommand {
                 }
             }
         };
-        this.timer.schedule(task, 5000, period);
-    }
-
-    public void stop() {
-        this.timer.cancel();
-    }
-
-    public void start() {
-        this.timer.schedule(task, 5000, period);
+        timer.schedule(task, 5000, period);
     }
 }

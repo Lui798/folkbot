@@ -45,7 +45,6 @@ public class ServerConnection extends WebSocketClient {
         String address = "http://" + ip + ":" + gamePort;
         this.password = password;
         this.channel = channel;
-        this.update = new Timer();
         this.timedCommands = new ArrayList<>();
         this.admins = admins;
 
@@ -56,16 +55,27 @@ public class ServerConnection extends WebSocketClient {
             log.error(e.getMessage());
         }
 
-        connect();
-        update.schedule(new TimerTask() {
-            @Override
-            public void run() {
-                update();
-            }
-        }, 5000, 1000);
         timedCommands.add(new TimedCommand(this,
                 Arrays.asList("Server.Say \"Join our community discord! https://discord.gg/HpNBESJ\"",
                         "Server.Say \"Type !help for a list of commands\""), 300000));
+
+        try {
+            connectBlocking();
+        }
+        catch (InterruptedException e) {
+            log.error(e.getMessage());
+        }
+
+        Timer reconnect = new Timer();
+        reconnect.schedule(new TimerTask() {
+            @Override
+            public void run() {
+                log.info("test");
+                if (!isOpen() || isClosed())
+                    log.info("reconnecting");
+                    reconnect();
+            }
+        }, 5000, 20000);
     }
 
     private void update() {
@@ -139,7 +149,17 @@ public class ServerConnection extends WebSocketClient {
         send("Server.ShouldAnnounce 1");
         send("Server.Announce");
 
-        update();
+        update = new Timer();
+        update.schedule(new TimerTask() {
+            @Override
+            public void run() {
+                update();
+            }
+        }, 5000, 1000);
+
+        for (TimedCommand t : timedCommands) {
+            t.start();
+        }
     }
 
     @Override
@@ -202,6 +222,13 @@ public class ServerConnection extends WebSocketClient {
         serverInfo = null;
         players = null;
         oldPlayers = null;
+
+        update.cancel();
+        update = null;
+
+        for (TimedCommand t : timedCommands) {
+            t.stop();
+        }
     }
 
     @Override
@@ -217,7 +244,7 @@ public class ServerConnection extends WebSocketClient {
 
     public void onLeave(Player p) {
         sendToRcon(p.name + " [" + p.serviceTag + "] has Left.");
-        sendToDiscord(embedMessage("Player Left", "Name - " + p.name +
+        sendToDiscord(embedMessage("Player Left", "Name - " + p.name + "\nIP - " + p.ip +
                 "\nUID - " + p.uid, Convert.hex2Rgb(p.primaryColor)));
     }
 

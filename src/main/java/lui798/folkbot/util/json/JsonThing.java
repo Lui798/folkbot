@@ -19,7 +19,7 @@ public class JsonThing {
 
     public JsonThing(String url) throws MalformedURLException {
         this.jsonUrl = new URL(url);
-        getJsonFromUrl();
+        //getJsonFromUrl();
     }
 
     public void getJsonFromUrl() {
