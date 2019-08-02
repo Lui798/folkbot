@@ -59,21 +59,16 @@ public class ServerConnection extends WebSocketClient {
                 Arrays.asList("Server.Say \"Join our community discord! https://discord.gg/HpNBESJ\"",
                         "Server.Say \"Type !help for a list of commands\""), 300000));
 
-        try {
-            connectBlocking();
-        }
-        catch (InterruptedException e) {
-            log.error(e.getMessage());
-        }
+        connect();
 
         Timer reconnect = new Timer();
         reconnect.schedule(new TimerTask() {
             @Override
             public void run() {
-                log.info("test");
-                if (!isOpen() || isClosed())
-                    log.info("reconnecting");
+                if (!isOpen()) {
+                    log.info("Reconnecting to WebSocket...");
                     reconnect();
+                }
             }
         }, 5000, 20000);
     }
