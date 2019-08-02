@@ -20,6 +20,7 @@ public class CommandRunner2 {
         //NORMAL COMMANDS
         COMMANDS.add(new ClearCommand());
         COMMANDS.add(new ScreenCommand());
+        COMMANDS.add(new EmbedCommand());
 
         //PLAYER COMMANDS
         COMMANDS.add(new PlayCommand(playerController));

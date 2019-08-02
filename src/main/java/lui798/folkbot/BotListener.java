@@ -10,6 +10,8 @@ import net.dv8tion.jda.core.events.guild.member.GuildMemberJoinEvent;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.core.events.message.react.MessageReactionAddEvent;
 import net.dv8tion.jda.core.hooks.ListenerAdapter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 
@@ -19,6 +21,8 @@ public class BotListener extends ListenerAdapter {
     private Guild guild;
     private Config config;
     private CommandRunner2 runner;
+
+    private final Logger LOG = LoggerFactory.getLogger(BotListener.class);
 
     public BotListener(Guild guild, Config config) {
         this.config = config;
@@ -58,7 +62,7 @@ public class BotListener extends ListenerAdapter {
 
             String m = message.getContentDisplay();
             if (message.getAttachments().isEmpty())
-                System.out.println(message.getAuthor().getName() + " > " + m);
+                LOG.info(message.getAuthor().getName() + " > " + m);
         }
 
         try {
