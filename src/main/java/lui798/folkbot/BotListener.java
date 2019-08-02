@@ -22,7 +22,7 @@ public class BotListener extends ListenerAdapter {
     public BotListener(Guild guild, Config config) {
         this.guild = guild;
         this.config = config;
-        this.runner = new CommandRunner2(guild);
+        this.runner = new CommandRunner2();
 
         if (guild.getTextChannels().contains(guild.getJDA().getTextChannelById(config.getProp("rconChat")))) {
             List<String> admins = config.getList("serverAdmins");

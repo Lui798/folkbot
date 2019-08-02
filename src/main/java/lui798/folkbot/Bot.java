@@ -26,7 +26,8 @@ public class Bot {
 
         jda.awaitReady();
         for (Guild g : jda.getGuilds()) {
-            jda.addEventListener(new BotListener(g, config));
+            if (g.getId().equals(config.getProp("guildID")))
+                jda.addEventListener(new BotListener(g, config));
         }
     }
 

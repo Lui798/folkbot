@@ -71,6 +71,7 @@ public class Config {
     private void setDefaultValues() {
         prop.setProperty("prefix", "$");
         prop.setProperty("discordToken", "unchanged");
+        prop.setProperty("guildID", "unchanged");
         prop.setProperty("rconChat", "unchanged");
         prop.setProperty("serverIP", "unchanged");
         prop.setProperty("rconPort", "unchanged");

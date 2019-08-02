@@ -2,7 +2,6 @@ package lui798.folkbot.command.util;
 
 import lui798.folkbot.command.*;
 import lui798.folkbot.command.halo.*;
-import net.dv8tion.jda.core.entities.Guild;
 import net.dv8tion.jda.core.entities.Message;
 
 import java.util.ArrayList;
@@ -12,7 +11,7 @@ import java.util.List;
 public class CommandRunner2 {
     private final List<Command> COMMANDS = new ArrayList<>();
 
-    public CommandRunner2(Guild guild) {
+    public CommandRunner2() {
         //HALO COMMANDS
         COMMANDS.add(new GameCommand());
     }
