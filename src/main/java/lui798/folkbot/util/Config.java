@@ -67,6 +67,8 @@ public class Config {
         prop.setProperty("discordToken", "default");
         prop.setProperty("joinRoles", "default");
         prop.setProperty("joinGuilds", "default");
+        prop.setProperty("noCommands", "default");
+        prop.setProperty("noMedia", "default");
 
         saveValues();
     }

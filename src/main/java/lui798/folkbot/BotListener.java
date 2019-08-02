@@ -3,6 +3,8 @@ package lui798.folkbot;
 import lui798.folkbot.command.util.CommandResult;
 import lui798.folkbot.command.util.CommandRunner2;
 import lui798.folkbot.player.AudioPlayerMain;
+import lui798.folkbot.util.Config;
+import net.dv8tion.jda.core.EmbedBuilder;
 import net.dv8tion.jda.core.entities.*;
 import net.dv8tion.jda.core.events.guild.member.GuildMemberJoinEvent;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
@@ -15,9 +17,11 @@ import static lui798.folkbot.command.player.PlayerCommand.numbers;
 
 public class BotListener extends ListenerAdapter {
     private Guild guild;
+    private Config config;
     private CommandRunner2 runner;
 
-    public BotListener(Guild guild) {
+    public BotListener(Guild guild, Config config) {
+        this.config = config;
         this.guild = guild;
         this.runner = new CommandRunner2(guild);
     }
@@ -35,7 +39,7 @@ public class BotListener extends ListenerAdapter {
             playerMain.getScheduler().play(index);
 
             queueMessage.clearReactions().queue();
-            queueMessage.editMessage(Bot.responseEmbed("Player Queue", playerMain.getQueue(), Bot.EMBED_COLOR)).queue();
+            queueMessage.editMessage(responseEmbed("Player Queue", playerMain.getQueue(), CommandResult.DEFAULT_COLOR)).queue();
             for (int i = 1; i < playerMain.getScheduler().getQueue().size() && i < 9; i++) {
                 queueMessage.addReaction(numbers[i + 1]).queue();
             }
@@ -49,7 +53,7 @@ public class BotListener extends ListenerAdapter {
         Message message = event.getMessage();
         CommandResult result = null;
 
-        if (runner.isCommand(message.getContentDisplay(), Bot.prefix)) {
+        if (runner.isCommand(message.getContentDisplay(), config.getProp("prefix"))) {
             result = runner.runCommand(message);
 
             String m = message.getContentDisplay();
@@ -58,31 +62,26 @@ public class BotListener extends ListenerAdapter {
         }
 
         try {
-            message.getTextChannel().sendMessage(Bot.responseEmbed(result.getResult(), result.getDesc(), result.getColor())).queue();
+            message.getTextChannel().sendMessage(responseEmbed(result.getResult(), result.getDesc(), result.getColor())).queue();
         }
         catch (NullPointerException e) { }
-
-//        } else if (!message.getAttachments().isEmpty() && !message.getAttachments().get(0).isImage()) {
-//            if (play.equalsInput(m))
-//                play.run(m + " " + message.getAttachments().get(0).getUrl());
-//        }
     }
 
     @Override
     public void onGuildMemberJoin(GuildMemberJoinEvent event) {
         if (!event.getGuild().getId().equals(guild.getId()) || event.getUser().isBot()) return;
 
-        if (!Bot.config.getProp("joinRoles").equals("default") && !Bot.config.getProp("joinGuilds").equals("default")) {
+        if (!config.getProp("joinRoles").equals("default") && !config.getProp("joinGuilds").equals("default")) {
 
             ArrayList<Guild> guilds = new ArrayList<>();
             ArrayList<Role> roles = new ArrayList<>();
 
-            for (String s : Bot.config.getList("joinGuilds")) {
+            for (String s : config.getList("joinGuilds")) {
                 guilds.add(event.getJDA().getGuildById(s));
             }
 
             if (guilds.contains(guild)) {
-                for (String s : Bot.config.getList("joinRoles")) {
+                for (String s : config.getList("joinRoles")) {
                     roles.add(guild.getRolesByName(s, false).get(0));
                 }
 
@@ -90,5 +89,13 @@ public class BotListener extends ListenerAdapter {
                 System.out.println("Assigned roles to new member " + event.getMember().getEffectiveName() + " in Guild " + event.getGuild().getName());
             }
         }
+    }
+
+    public MessageEmbed responseEmbed(String name, String value, int color) {
+        EmbedBuilder embed = new EmbedBuilder();
+        embed.setColor(color);
+        embed.addField(name, value, false);
+
+        return embed.build();
     }
 }
