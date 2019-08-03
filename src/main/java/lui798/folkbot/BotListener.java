@@ -50,7 +50,7 @@ public class BotListener extends ListenerAdapter {
             if (message.getAttachments().isEmpty())
                 System.out.println(message.getAuthor().getName() + " > " + m);
         }
-        else if (guild.getTextChannels().contains(guild.getJDA().getTextChannelById(config.getProp("rconChat")))) {
+        else if (message.getTextChannel().getId().equals(config.getProp("rconChat"))) {
             server.sendToRcon(message.getContentDisplay());
         }
 
