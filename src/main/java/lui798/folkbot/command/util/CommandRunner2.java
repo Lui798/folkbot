@@ -21,6 +21,7 @@ public class CommandRunner2 {
         COMMANDS.add(new ClearCommand());
         COMMANDS.add(new ScreenCommand());
         COMMANDS.add(new EmbedCommand());
+        COMMANDS.add(new StatsCommand());
 
         //PLAYER COMMANDS
         COMMANDS.add(new PlayCommand(playerController));
