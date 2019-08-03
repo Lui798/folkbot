@@ -57,7 +57,38 @@ public class BotListener extends ListenerAdapter {
         Message message = event.getMessage();
         CommandResult result = null;
 
-        if (runner.isCommand(message.getContentDisplay(), config.getProp("prefix"))) {
+        if (!message.getAttachments().isEmpty() && message.getTextChannel().getId().equals(config.getProp("noMedia"))) {
+            new Thread(() -> {
+                try {
+                    Message response = message.getTextChannel().sendMessage(responseEmbed("Not Allowed",
+                            "Please send media in the <#" + config.getProp("media") + "> chat.", CommandResult.ERROR_COLOR)).complete();
+                    Thread.sleep(1000);
+                    message.delete().complete();
+                    Thread.sleep(5000);
+                    response.delete().complete();
+                }
+                catch (Exception e) {
+                    LOG.error(e.getMessage());
+                }
+            }).start();
+        }
+        else if (runner.isCommand(message.getContentDisplay(), config.getProp("prefix"))
+                && message.getTextChannel().getId().equals(config.getProp("noCommands"))) {
+            new Thread(() -> {
+                try {
+                    Message response = message.getTextChannel().sendMessage(responseEmbed("Not Allowed",
+                            "Please send commands in the <#" + config.getProp("commands") + "> chat.", CommandResult.ERROR_COLOR)).complete();
+                    Thread.sleep(1000);
+                    message.delete().complete();
+                    Thread.sleep(5000);
+                    response.delete().complete();
+                }
+                catch (Exception e) {
+                    LOG.error(e.getMessage());
+                }
+            }).start();
+        }
+        else if (runner.isCommand(message.getContentDisplay(), config.getProp("prefix"))) {
             result = runner.runCommand(message);
 
             String m = message.getContentDisplay();

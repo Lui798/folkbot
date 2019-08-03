@@ -23,7 +23,7 @@ public class Bot {
         new DependencyFile(new URL("https://yt-dl.org/downloads/latest/youtube-dl.exe"),
                 System.getProperty("user.dir") + File.separator + "bin", "youtube-dl.exe");
 
-        config = new Config();
+        config = new Config("folkbot.conf");
         prefix = config.getProp("prefix");
         JDABuilder builder = new JDABuilder(AccountType.BOT);
 

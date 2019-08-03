@@ -6,10 +6,11 @@ import java.util.List;
 import java.util.Properties;
 
 public class Config {
-    private final String FILE_NAME = "folkbot.conf";
+    private final String FILE_NAME;
     private Properties prop;
 
-    public Config() {
+    public Config(String fileName) {
+        FILE_NAME = fileName;
         prop = new Properties();
         noFile();
         loadValues();
@@ -69,6 +70,8 @@ public class Config {
         prop.setProperty("joinGuilds", "default");
         prop.setProperty("noCommands", "default");
         prop.setProperty("noMedia", "default");
+        prop.setProperty("commands", "default");
+        prop.setProperty("media", "default");
 
         saveValues();
     }
