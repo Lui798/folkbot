@@ -57,7 +57,7 @@ public class BotListener extends ListenerAdapter {
         Message message = event.getMessage();
         CommandResult result = null;
 
-        if (!message.getAttachments().isEmpty() && message.getTextChannel().getId().equals(config.getProp("noMedia"))) {
+        if (!message.getAttachments().isEmpty() && config.getList("noMedia").contains(message.getTextChannel().getId())) {
             new Thread(() -> {
                 try {
                     Message response = message.getTextChannel().sendMessage(responseEmbed("Not Allowed",
@@ -73,7 +73,7 @@ public class BotListener extends ListenerAdapter {
             }).start();
         }
         else if (runner.isCommand(message.getContentDisplay(), config.getProp("prefix"))
-                && message.getTextChannel().getId().equals(config.getProp("noCommands"))) {
+                && config.getList("noCommands").contains(message.getTextChannel().getId())) {
             new Thread(() -> {
                 try {
                     Message response = message.getTextChannel().sendMessage(responseEmbed("Not Allowed",
