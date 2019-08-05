@@ -31,13 +31,25 @@ public class StatsCommand extends Command {
         builder.setColor(CommandResult.DEFAULT_COLOR);
         builder.setAuthor(guild.getName(), null, message.getGuild().getIconUrl());
 
-        builder.addField("Owner", "<@" + guild.getOwner().getUser().getId() + ">", true);
+        List<Member> owners = new ArrayList<>(members);
+        List<String> ownerString = new ArrayList<>();
+        ownerString.add("<@" + guild.getOwner().getUser().getId() + ">");
+        if (!guild.getRolesByName("Owner", true).isEmpty()) {
+            owners.removeIf(m -> !m.getRoles().contains(guild.getRolesByName("Owner", true).get(0)));
+            owners.remove(guild.getOwner());
+            for (Member m : owners) {
+                ownerString.add("<@" + m.getUser().getId() + ">");
+            }
+        }
+        builder.addField("Owners", stringBuilder(ownerString), true);
 
         List<Member> admins = new ArrayList<>(members);
         List<String> adminsString = new ArrayList<>();
-        admins.removeIf(m -> !m.getRoles().contains(guild.getRolesByName("Admin", true).get(0)));
-        for (Member m : admins) {
-            adminsString.add("<@" + m.getUser().getId() + ">");
+        if (!guild.getRolesByName("Admin", true).isEmpty()) {
+            admins.removeIf(m -> !m.getRoles().contains(guild.getRolesByName("Admin", true).get(0)));
+            for (Member m : admins) {
+                adminsString.add("<@" + m.getUser().getId() + ">");
+            }
         }
         builder.addField("Admins", stringBuilder(adminsString), true);
 
@@ -58,7 +70,7 @@ public class StatsCommand extends Command {
         for (Member o : online) {
             offline.remove(o);
         }
-        builder.addField("Offline", Integer.toString(offline.size()), true);
+        builder.addField("Offline", Integer.toString(offline.size()-1), true);
 
         return builder.build();
     }
