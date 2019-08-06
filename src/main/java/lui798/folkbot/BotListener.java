@@ -14,6 +14,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import static lui798.folkbot.command.player.PlayerCommand.numbers;
 
@@ -57,20 +58,52 @@ public class BotListener extends ListenerAdapter {
         Message message = event.getMessage();
         CommandResult result = null;
 
-        if (!message.getAttachments().isEmpty() && config.getList("noMedia").contains(message.getTextChannel().getId())) {
-            new Thread(() -> {
-                try {
-                    Message response = message.getTextChannel().sendMessage(responseEmbed("Not Allowed",
-                            "Please send media in the <#" + config.getProp("media") + "> chat.", CommandResult.ERROR_COLOR)).complete();
-                    Thread.sleep(1000);
-                    message.delete().complete();
-                    Thread.sleep(5000);
-                    response.delete().complete();
+        final List<String> MEDIA_LINKS = new ArrayList<>();
+        MEDIA_LINKS.add("facebook.com");
+        MEDIA_LINKS.add("youtube.com");
+        MEDIA_LINKS.add("youtu.be");
+        MEDIA_LINKS.add("instagram.com");
+        MEDIA_LINKS.add("twitter.com");
+        MEDIA_LINKS.add("imgur.com");
+        MEDIA_LINKS.add("reddit.com");
+
+        if (config.getList("noMedia").contains(message.getTextChannel().getId())) {
+            if (!message.getAttachments().isEmpty()) {
+                new Thread(() -> {
+                    try {
+                        Message response = message.getTextChannel().sendMessage(responseEmbed("Not Allowed",
+                                "Please send media in the <#" + config.getProp("media") + "> chat.", CommandResult.ERROR_COLOR)).complete();
+                        Thread.sleep(1000);
+                        message.delete().complete();
+                        Thread.sleep(5000);
+                        response.delete().complete();
+                    }
+                    catch (Exception e) {
+                        LOG.error(e.getMessage());
+                    }
+                }).start();
+            }
+            else {
+                for (String s : MEDIA_LINKS) {
+                    if (message.getContentDisplay().contains(s)) {
+                        new Thread(() -> {
+                            try {
+                                Message response = message.getTextChannel().sendMessage(responseEmbed("Not Allowed",
+                                        "Please send media in the <#" + config.getProp("media") + "> chat.", CommandResult.ERROR_COLOR)).complete();
+                                Thread.sleep(1000);
+                                message.delete().complete();
+                                Thread.sleep(5000);
+                                response.delete().complete();
+                            }
+                            catch (Exception e) {
+                                LOG.error(e.getMessage());
+                            }
+                        }).start();
+                        break;
+                    }
                 }
-                catch (Exception e) {
-                    LOG.error(e.getMessage());
-                }
-            }).start();
+            }
+
         }
         else if (runner.isCommand(message.getContentDisplay(), config.getProp("prefix"))
                 && config.getList("noCommands").contains(message.getTextChannel().getId())) {

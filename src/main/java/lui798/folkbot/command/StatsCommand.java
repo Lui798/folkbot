@@ -67,10 +67,11 @@ public class StatsCommand extends Command {
         builder.addField("Online", Integer.toString(online.size()), true);
 
         List<Member> offline = new ArrayList<>(members);
+        offline.removeIf(m -> m.getUser().isBot());
         for (Member o : online) {
             offline.remove(o);
         }
-        builder.addField("Offline", Integer.toString(offline.size()-1), true);
+        builder.addField("Offline", Integer.toString(offline.size()), true);
 
         return builder.build();
     }
