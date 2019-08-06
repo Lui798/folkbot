@@ -37,7 +37,7 @@ public class CommandRunner2 {
 
     private Command getCommand(String command) {
         for (Command c : COMMANDS) {
-            if (command.equals(c.getName()))
+            if (command.startsWith(c.getName()))
                 return c;
         }
         return null;
