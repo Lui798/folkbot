@@ -209,6 +209,9 @@ public class ServerConnection extends WebSocketClient {
             }
             catch (NullPointerException e) { }
         }
+        else {
+            sendToDiscord(embedMessage("ServerResponse", message, Convert.hex2Rgb("#000000")));
+        }
     }
 
     @Override
