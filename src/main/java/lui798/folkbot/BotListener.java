@@ -9,6 +9,8 @@ import net.dv8tion.jda.core.events.guild.member.GuildMemberJoinEvent;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.core.events.message.react.MessageReactionAddEvent;
 import net.dv8tion.jda.core.hooks.ListenerAdapter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -18,6 +20,8 @@ public class BotListener extends ListenerAdapter {
     private Config config;
     private CommandRunner2 runner;
     private ServerConnection server;
+
+    private final Logger LOG = LoggerFactory.getLogger(BotListener.class);
 
     public BotListener(Guild guild, Config config) {
         this.guild = guild;
@@ -48,11 +52,13 @@ public class BotListener extends ListenerAdapter {
 
             String m = message.getContentDisplay();
             if (message.getAttachments().isEmpty())
-                System.out.println(message.getAuthor().getName() + " > " + m);
+                LOG.info(message.getAuthor().getName() + " > " + m);
         }
         else if (message.getTextChannel().getId().equals(config.getProp("rconChat"))) {
-            if (!message.getMember().getUser().getId().equals("463122243300360192"))
+            if (!message.getMember().getUser().getId().equals("463122243300360192")) {
+                LOG.info("RCON: " + message.getAuthor().getName() + " > " + message.getContentDisplay());
                 server.send(message.getContentDisplay());
+            }
         }
 
         try {
