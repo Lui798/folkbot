@@ -51,7 +51,8 @@ public class BotListener extends ListenerAdapter {
                 System.out.println(message.getAuthor().getName() + " > " + m);
         }
         else if (message.getTextChannel().getId().equals(config.getProp("rconChat"))) {
-            server.send(message.getContentDisplay());
+            if (!message.getMember().getUser().getId().equals("463122243300360192"))
+                server.send(message.getContentDisplay());
         }
 
         try {
