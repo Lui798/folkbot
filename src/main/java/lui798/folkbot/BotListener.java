@@ -67,7 +67,31 @@ public class BotListener extends ListenerAdapter {
         MEDIA_LINKS.add("imgur.com");
         MEDIA_LINKS.add("reddit.com");
 
-        if (config.getList("noMedia").contains(message.getTextChannel().getId())) {
+
+        if (runner.isCommand(message.getContentDisplay(), config.getProp("prefix"))
+                && config.getList("noCommands").contains(message.getTextChannel().getId())) {
+            new Thread(() -> {
+                try {
+                    Message response = message.getTextChannel().sendMessage(responseEmbed("Not Allowed",
+                            "Please send commands in the <#" + config.getProp("commands") + "> chat.", CommandResult.ERROR_COLOR)).complete();
+                    Thread.sleep(1000);
+                    message.delete().complete();
+                    Thread.sleep(5000);
+                    response.delete().complete();
+                }
+                catch (Exception e) {
+                    LOG.error(e.getMessage());
+                }
+            }).start();
+        }
+        else if (runner.isCommand(message.getContentDisplay(), config.getProp("prefix"))) {
+            result = runner.runCommand(message);
+
+            String m = message.getContentDisplay();
+            if (message.getAttachments().isEmpty())
+                LOG.info(message.getAuthor().getName() + " > " + m);
+        }
+        else if (config.getList("noMedia").contains(message.getTextChannel().getId())) {
             if (!message.getAttachments().isEmpty()) {
                 new Thread(() -> {
                     try {
@@ -104,29 +128,6 @@ public class BotListener extends ListenerAdapter {
                 }
             }
 
-        }
-        else if (runner.isCommand(message.getContentDisplay(), config.getProp("prefix"))
-                && config.getList("noCommands").contains(message.getTextChannel().getId())) {
-            new Thread(() -> {
-                try {
-                    Message response = message.getTextChannel().sendMessage(responseEmbed("Not Allowed",
-                            "Please send commands in the <#" + config.getProp("commands") + "> chat.", CommandResult.ERROR_COLOR)).complete();
-                    Thread.sleep(1000);
-                    message.delete().complete();
-                    Thread.sleep(5000);
-                    response.delete().complete();
-                }
-                catch (Exception e) {
-                    LOG.error(e.getMessage());
-                }
-            }).start();
-        }
-        else if (runner.isCommand(message.getContentDisplay(), config.getProp("prefix"))) {
-            result = runner.runCommand(message);
-
-            String m = message.getContentDisplay();
-            if (message.getAttachments().isEmpty())
-                LOG.info(message.getAuthor().getName() + " > " + m);
         }
 
         try {
