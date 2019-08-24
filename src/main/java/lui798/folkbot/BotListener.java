@@ -2,7 +2,6 @@ package lui798.folkbot;
 
 import lui798.folkbot.command.util.CommandResult;
 import lui798.folkbot.command.util.CommandRunner2;
-import lui798.folkbot.halo.ServerConnection;
 import lui798.folkbot.util.Config;
 import net.dv8tion.jda.core.entities.*;
 import net.dv8tion.jda.core.events.guild.member.GuildMemberJoinEvent;
@@ -12,27 +11,17 @@ import net.dv8tion.jda.core.hooks.ListenerAdapter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.List;
-
 public class BotListener extends ListenerAdapter {
     private Guild guild;
     private Config config;
     private CommandRunner2 runner;
-    private ServerConnection server;
 
     private final Logger LOG = LoggerFactory.getLogger(BotListener.class);
 
     public BotListener(Guild guild, Config config) {
         this.guild = guild;
         this.config = config;
-        this.runner = new CommandRunner2();
-
-        if (guild.getTextChannels().contains(guild.getJDA().getTextChannelById(config.getProp("rconChat")))) {
-            List<String> admins = config.getList("serverAdmins");
-            server = new ServerConnection(this.config.getProp("serverIP"), this.config.getProp("rconPort"), this.config.getProp("gamePort"),
-                    this.config.getProp("rconPass"), guild.getTextChannelById(this.config.getProp("rconChat")), admins);
-        }
+        this.runner = new CommandRunner2(config, guild);
     }
 
     @Override
@@ -53,12 +42,6 @@ public class BotListener extends ListenerAdapter {
             String m = message.getContentDisplay();
             if (message.getAttachments().isEmpty())
                 LOG.info(message.getAuthor().getName() + " > " + m);
-        }
-        else if (message.getTextChannel().getId().equals(config.getProp("rconChat"))) {
-            if (!message.getMember().getUser().getId().equals("463122243300360192")) {
-                LOG.info("RCON: " + message.getAuthor().getName() + " > " + message.getContentDisplay());
-                server.send(message.getContentDisplay());
-            }
         }
 
         try {

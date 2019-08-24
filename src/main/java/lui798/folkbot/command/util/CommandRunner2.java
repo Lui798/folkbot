@@ -1,7 +1,11 @@
 package lui798.folkbot.command.util;
 
 import lui798.folkbot.command.*;
-import lui798.folkbot.command.halo.*;
+import lui798.folkbot.command.twitch.LiveCommand;
+import lui798.folkbot.command.twitch.UserCommand;
+import lui798.folkbot.twitch.TwitchController;
+import lui798.folkbot.util.Config;
+import net.dv8tion.jda.core.entities.Guild;
 import net.dv8tion.jda.core.entities.Message;
 
 import java.util.ArrayList;
@@ -10,10 +14,14 @@ import java.util.List;
 
 public class CommandRunner2 {
     private final List<Command> COMMANDS = new ArrayList<>();
+    private TwitchController twitchController;
 
-    public CommandRunner2() {
-        //HALO COMMANDS
-        COMMANDS.add(new GameCommand());
+    public CommandRunner2(Config config, Guild guild) {
+        twitchController = new TwitchController(config, guild);
+
+        //TWITCH COMMANDS
+        COMMANDS.add(new LiveCommand(twitchController));
+        COMMANDS.add(new UserCommand(twitchController));
     }
 
     private Command getCommand(String command) {

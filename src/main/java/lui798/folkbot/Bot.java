@@ -13,7 +13,7 @@ public class Bot {
     private static JDA jda;
 
     public static void main(String[] args) throws Exception {
-        config = new Config("halobot.conf");
+        config = new Config("twitchbot.conf");
         prefix = config.getProp("prefix");
         JDABuilder builder = new JDABuilder(AccountType.BOT);
 

@@ -72,11 +72,9 @@ public class Config {
         prop.setProperty("prefix", "$");
         prop.setProperty("discordToken", "unchanged");
         prop.setProperty("guildID", "unchanged");
-        prop.setProperty("rconChat", "unchanged");
-        prop.setProperty("serverIP", "unchanged");
-        prop.setProperty("rconPort", "unchanged");
-        prop.setProperty("gamePort", "unchanged");
-        prop.setProperty("rconPass", "unchanged");
+        prop.setProperty("twitchUser", "unchanged");
+        prop.setProperty("twitchClientID", "unchanged");
+        prop.setProperty("liveChannel", "unchanged");
 
         saveValues();
     }

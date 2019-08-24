@@ -1,7 +1,6 @@
-package lui798.folkbot.util.json;
+package lui798.folkbot.util;
 
 import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
