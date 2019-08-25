@@ -66,6 +66,8 @@ public class BotListener extends ListenerAdapter {
         MEDIA_LINKS.add("twitter.com");
         MEDIA_LINKS.add("imgur.com");
         MEDIA_LINKS.add("reddit.com");
+        MEDIA_LINKS.add("cdn.discordapp.com");
+        MEDIA_LINKS.add("pornhub.com");
 
 
         if (runner.isCommand(message.getContentDisplay(), config.getProp("prefix"))
