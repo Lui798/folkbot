@@ -5,6 +5,7 @@ import lui798.folkbot.command.util.CommandRunner2;
 import lui798.folkbot.player.AudioPlayerMain;
 import lui798.folkbot.util.Config;
 import net.dv8tion.jda.core.EmbedBuilder;
+import net.dv8tion.jda.core.Permission;
 import net.dv8tion.jda.core.entities.*;
 import net.dv8tion.jda.core.events.guild.member.GuildMemberJoinEvent;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
@@ -71,7 +72,7 @@ public class BotListener extends ListenerAdapter {
 
 
         if (runner.isCommand(message.getContentDisplay(), config.getProp("prefix"))
-                && config.getList("noCommands").contains(message.getTextChannel().getId())) {
+                && config.getList("noCommands").contains(message.getTextChannel().getId()) && !message.getMember().getPermissions().contains(Permission.ADMINISTRATOR)) {
             new Thread(() -> {
                 try {
                     Message response = message.getTextChannel().sendMessage(responseEmbed("Not Allowed",
@@ -93,7 +94,7 @@ public class BotListener extends ListenerAdapter {
             if (message.getAttachments().isEmpty())
                 LOG.info(message.getAuthor().getName() + " > " + m);
         }
-        else if (config.getList("noMedia").contains(message.getTextChannel().getId())) {
+        else if (config.getList("noMedia").contains(message.getTextChannel().getId()) && !message.getMember().getPermissions().contains(Permission.ADMINISTRATOR)) {
             if (!message.getAttachments().isEmpty()) {
                 new Thread(() -> {
                     try {
