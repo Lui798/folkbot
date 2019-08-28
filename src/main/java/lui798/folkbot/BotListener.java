@@ -55,10 +55,8 @@ public class BotListener extends ListenerAdapter {
                 LOG.info(message.getAuthor().getName() + " > " + m);
         }
         else if (message.getTextChannel().getId().equals(config.getProp("rconChat"))) {
-            if (!message.getMember().getUser().getId().equals("463122243300360192")) {
-                LOG.info("RCON: " + message.getAuthor().getName() + " > " + message.getContentDisplay());
-                server.send(message.getContentDisplay());
-            }
+            LOG.info("RCON: " + message.getAuthor().getName() + " > " + message.getContentDisplay());
+            server.send(message.getContentDisplay());
         }
 
         try {

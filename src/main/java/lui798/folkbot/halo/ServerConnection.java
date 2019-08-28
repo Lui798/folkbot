@@ -82,12 +82,22 @@ public class ServerConnection extends WebSocketClient {
 
     private void updatePlayers() {
         if (serverJson.element().getAsJsonObject().get("players") != null) {
+            PlayerList playerIP = null;
+            if (players != null)
+                playerIP = players;
+
             JsonArray array = serverJson.element().getAsJsonObject().get("players").getAsJsonArray();
             this.players = new PlayerList();
 
             for (JsonElement e : array) {
                 players.add(new Gson().fromJson(e, Player.class));
             }
+            if (playerIP != null)
+                for (Player p : players) {
+                    Player p2 = playerIP.find(p.name, p.uid);
+                    if (p2.ip != null)
+                        p.ip = p2.ip;
+                }
         }
     }
 
@@ -124,12 +134,12 @@ public class ServerConnection extends WebSocketClient {
         else {
             for (Player p : players) {
                 if (!listContainsPlayer(oldPlayers, p))
-                    if (!p.name.equals("") || !p.uid.equals("0000000000000000"))
+                    if (!p.name.trim().equals("") || !p.uid.startsWith("0000"))
                         onJoin(p);
             }
             for (Player p : oldPlayers) {
                 if (!listContainsPlayer(players, p))
-                    if (!p.name.equals("") || !p.uid.equals("0000000000000000"))
+                    if (!p.name.trim().equals("") || !p.uid.startsWith("0000"))
                         onLeave(p);
             }
         }
@@ -169,8 +179,8 @@ public class ServerConnection extends WebSocketClient {
                 ChatMessage c = RegexParser.parseMessage(message);
 
                 if (!c.name.equals("SERVER")) {
-                    if (players.find(c.name).ip == null)
-                        players.find(c.name).ip = c.ip;
+                    if (oldPlayers.find(c.name).ip == null)
+                        oldPlayers.find(c.name).ip = c.ip;
 
                     if (c.message.toLowerCase().startsWith(PREFIX + "help")) {
                         sendPM(c.name, "!report <name> - Reports specified player to the admins.");
