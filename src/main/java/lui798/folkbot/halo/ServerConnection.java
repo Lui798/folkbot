@@ -92,12 +92,13 @@ public class ServerConnection extends WebSocketClient {
             for (JsonElement e : array) {
                 players.add(new Gson().fromJson(e, Player.class));
             }
-            if (playerIP != null)
+            if (playerIP != null) {
                 for (Player p : players) {
                     Player p2 = playerIP.find(p.name, p.uid);
-                    if (p2.ip != null)
+                    if (p2 != null && p2.ip != null)
                         p.ip = p2.ip;
                 }
+            }
         }
     }
 
