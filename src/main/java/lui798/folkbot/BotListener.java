@@ -31,7 +31,7 @@ public class BotListener extends ListenerAdapter {
         if (guild.getTextChannels().contains(guild.getJDA().getTextChannelById(config.getProp("rconChat")))) {
             List<String> admins = config.getList("serverAdmins");
             server = new ServerConnection(this.config.getProp("serverIP"), this.config.getProp("rconPort"), this.config.getProp("gamePort"),
-                    this.config.getProp("rconPass"), guild.getTextChannelById(this.config.getProp("rconChat")), admins);
+                    this.config.getProp("rconPass"), guild.getTextChannelById(this.config.getProp("rconChat")), admins, config);
         }
     }
 

@@ -10,6 +10,7 @@ import lui798.folkbot.halo.util.Convert;
 import lui798.folkbot.halo.object.PlayerList;
 import lui798.folkbot.halo.util.RegexParser;
 import lui798.folkbot.halo.util.TimedCommand;
+import lui798.folkbot.util.Config;
 import lui798.folkbot.util.json.JsonThing;
 import net.dv8tion.jda.core.EmbedBuilder;
 import net.dv8tion.jda.core.entities.MessageEmbed;
@@ -38,8 +39,9 @@ public class ServerConnection extends WebSocketClient {
     private TextChannel channel;
     private String password;
     private String lastStatus = null;
+    private Config config;
 
-    public ServerConnection(String ip, String rconPort, String gamePort, String password, TextChannel channel, List<String> admins) {
+    public ServerConnection(String ip, String rconPort, String gamePort, String password, TextChannel channel, List<String> admins, Config config) {
         super(URI.create("ws://" + ip + ":" + rconPort), new Draft_6455(Collections.emptyList(), Collections.singletonList(new Protocol("dew-rcon"))));
 
         String address = "http://" + ip + ":" + gamePort;
@@ -47,6 +49,7 @@ public class ServerConnection extends WebSocketClient {
         this.channel = channel;
         this.timedCommands = new ArrayList<>();
         this.admins = admins;
+        this.config = config;
 
         try {
             this.serverJson = new JsonThing(address);
@@ -56,8 +59,7 @@ public class ServerConnection extends WebSocketClient {
         }
 
         timedCommands.add(new TimedCommand(this,
-                Arrays.asList("Server.Say \"Join our community discord! https://discord.gg/HpNBESJ\"",
-                        "Server.Say \"Type !help for a list of commands\""), 300000));
+                config.getList("timedCommands"), 300000));
 
         connect();
 
@@ -250,6 +252,12 @@ public class ServerConnection extends WebSocketClient {
         sendToRcon(p.name + " [" + p.serviceTag + "] has Joined.");
         sendToDiscord(embedMessage("Player Joined", "Name - " + p.name +
                 "\nUID - " + p.uid, Convert.hex2Rgb(p.primaryColor)));
+
+        List<String> rules = config.getList("serverRules");
+
+        for (String r : rules) {
+            sendPM(p.name, r);
+        }
     }
 
     public void onLeave(Player p) {
