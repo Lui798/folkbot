@@ -203,14 +203,14 @@ public class ServerConnection extends WebSocketClient {
                     else if (c.message.toLowerCase().startsWith(PREFIX + "discord")) {
                         sendPM(c.name, "@" + c.name + ", here's your invite: https://discord.gg/HpNBESJ");
                     }
-                    else if (c.message.toLowerCase().startsWith(PREFIX + "endgame") && admins.contains(c.uid)) {
+                    else if (c.message.toLowerCase().startsWith(PREFIX + "a.endgame") && admins.contains(c.uid)) {
                         send("Game.End");
                         log.info(c.name + " ended the game.");
                     }
-                    else if (c.message.toLowerCase().startsWith(PREFIX + "shuffleteams") && admins.contains(c.uid)) {
+                    else if (c.message.toLowerCase().startsWith(PREFIX + "a.shuffleteams") && admins.contains(c.uid)) {
                         send("Server.ShuffleTeams");
                     }
-                    else if (c.message.toLowerCase().startsWith(PREFIX + "kick") && admins.contains(c.uid)) {
+                    else if (c.message.toLowerCase().startsWith(PREFIX + "a.kick") && admins.contains(c.uid)) {
                         String[] split = c.message.split(" ", 2);
                         if (split.length > 1)
                             send("Server.KickPlayer " + split[1]);
