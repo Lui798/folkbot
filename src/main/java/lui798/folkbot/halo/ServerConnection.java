@@ -131,7 +131,7 @@ public class ServerConnection extends WebSocketClient {
         if (oldPlayers == null) {
             oldPlayers = players;
             for (Player p : oldPlayers) {
-                onJoin(p);
+                //onJoin(p);
             }
         }
         else {

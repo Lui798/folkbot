@@ -27,7 +27,7 @@ public class Config {
     }
 
     public List<String> getList(String key) {
-        return Arrays.asList(prop.getProperty(key).split("\\s*,\\s*"));
+        return Arrays.asList(prop.getProperty(key).split(","));
     }
 
     private void noFile() {
