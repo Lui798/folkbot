@@ -3,6 +3,7 @@ package lui798.folkbot.halo;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
+import lui798.folkbot.halo.command.util.HaloCommandRunner;
 import lui798.folkbot.halo.object.ChatMessage;
 import lui798.folkbot.halo.object.Player;
 import lui798.folkbot.halo.object.ServerInfo;
@@ -41,6 +42,8 @@ public class ServerConnection extends WebSocketClient {
     private String lastStatus = null;
     private Config config;
 
+    private HaloCommandRunner commandRunner;
+
     public ServerConnection(String ip, String rconPort, String gamePort, String password, TextChannel channel, List<String> admins, Config config) {
         super(URI.create("ws://" + ip + ":" + rconPort), new Draft_6455(Collections.emptyList(), Collections.singletonList(new Protocol("dew-rcon"))));
 
@@ -50,6 +53,7 @@ public class ServerConnection extends WebSocketClient {
         this.timedCommands = new ArrayList<>();
         this.admins = admins;
         this.config = config;
+        this.commandRunner = new HaloCommandRunner(this);
 
         try {
             this.serverJson = new JsonThing(address);
@@ -180,44 +184,20 @@ public class ServerConnection extends WebSocketClient {
         else if (RegexParser.isMessage(message)) {
             try {
                 ChatMessage c = RegexParser.parseMessage(message);
+                String r = null;
 
                 if (!c.name.equals("SERVER")) {
                     if (oldPlayers.find(c.name).ip == null)
                         oldPlayers.find(c.name).ip = c.ip;
 
-                    if (c.message.toLowerCase().startsWith(PREFIX + "help")) {
-                        sendPM(c.name, "!report <name> - Reports specified player to the admins.");
-                        sendPM(c.name, "!discord - Sends you a link to our discord.");
+                    if (commandRunner.isCommand(c.message, PREFIX)) {
+                        r = commandRunner.runCommand(c, admins.contains(c.uid));
                     }
-                    else if (c.message.toLowerCase().startsWith(PREFIX + "report")) {
-                        String[] split = c.message.split(" ", 2);
-                        if (split.length < 2)
-                            sendPM(c.name, "Please type the command like this: !report name");
-                        else {
-                            Player p = players.find(split[1]);
-                            sendToDiscord(embedMessage("Player Reported", "Name - " + p.name +
-                                    "\nIP - " + p.ip + "\nUID - " + p.uid, 14696512));
-                            sendPM(c.name, "Player successfully reported.");
-                        }
+                    if (r != null && !r.trim().equals("")) {
+                        sendPM(c.name, r);
                     }
-                    else if (c.message.toLowerCase().startsWith(PREFIX + "discord")) {
-                        sendPM(c.name, "@" + c.name + ", here's your invite: https://discord.gg/HpNBESJ");
-                    }
-                    else if (c.message.toLowerCase().startsWith(PREFIX + "a.endgame") && admins.contains(c.uid)) {
-                        send("Game.End");
-                        log.info(c.name + " ended the game.");
-                    }
-                    else if (c.message.toLowerCase().startsWith(PREFIX + "a.shuffleteams") && admins.contains(c.uid)) {
-                        send("Server.ShuffleTeams");
-                    }
-                    else if (c.message.toLowerCase().startsWith(PREFIX + "a.kick") && admins.contains(c.uid)) {
-                        String[] split = c.message.split(" ", 2);
-                        if (split.length > 1)
-                            send("Server.KickPlayer " + split[1]);
-                    }
-                    if (!c.message.startsWith(PREFIX + "report")) {
-                        sendToDiscord(embedMessage(c.name, c.message, Convert.hex2Rgb(players.find(c.name).primaryColor)));
-                    }
+
+                    sendToDiscord(embedMessage(c.name, c.message, Convert.hex2Rgb(players.find(c.name).primaryColor)));
                 }
             }
             catch (NullPointerException e) { }
@@ -248,8 +228,8 @@ public class ServerConnection extends WebSocketClient {
         log.error(ex.getMessage());
     }
 
-    public void onJoin(Player p) {
-        sendToRcon(p.name + " [" + p.serviceTag + "] has Joined.");
+    private void onJoin(Player p) {
+        sendToRcon(p.name + " [" + p.serviceTag + "] has joined.");
         sendToDiscord(embedMessage("Player Joined", "Name - " + p.name +
                 "\nUID - " + p.uid, Convert.hex2Rgb(p.primaryColor)));
 
@@ -260,10 +240,18 @@ public class ServerConnection extends WebSocketClient {
         }
     }
 
-    public void onLeave(Player p) {
-        sendToRcon(p.name + " [" + p.serviceTag + "] has Left.");
+    private void onLeave(Player p) {
+        sendToRcon(p.name + " [" + p.serviceTag + "] has left.");
         sendToDiscord(embedMessage("Player Left", "Name - " + p.name + "\nIP - " + p.ip +
                 "\nUID - " + p.uid, Convert.hex2Rgb(p.primaryColor)));
+    }
+
+    public PlayerList getPlayers() {
+        return players;
+    }
+
+    public List<String> getAdmins() {
+        return admins;
     }
 
     public void sendToRcon(String message) {
@@ -278,7 +266,7 @@ public class ServerConnection extends WebSocketClient {
         channel.sendMessage(embed).queue();
     }
 
-    private MessageEmbed embedMessage(String title, String message, int color) {
+    public MessageEmbed embedMessage(String title, String message, int color) {
         EmbedBuilder builder = new EmbedBuilder();
         builder.addField(title, message, false);
         builder.setColor(color);
