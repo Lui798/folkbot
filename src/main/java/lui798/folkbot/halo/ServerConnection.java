@@ -236,7 +236,18 @@ public class ServerConnection extends WebSocketClient {
         List<String> rules = config.getList("serverRules");
 
         for (String r : rules) {
-            sendPM(p.name, r);
+            if (r.equals("{listAdmins}")) {
+                List<String> adminsOnline = new ArrayList<>();
+                for (Player pl : players) {
+                    if (admins.contains(pl.uid))
+                        adminsOnline.add(pl.name);
+                }
+                if (!adminsOnline.isEmpty())
+                    sendPM(p.name, "Admins online: " + String.join(", ", adminsOnline));
+                else
+                    sendPM(p.name, "There are no admins online.");
+            }
+            else sendPM(p.name, r);
         }
     }
 
