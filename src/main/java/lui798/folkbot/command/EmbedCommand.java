@@ -43,7 +43,7 @@ public class EmbedCommand extends Command {
                         builder.setTitle(parts.get(1));
                     break;
                 case "setFooter":
-                    if (parts.size() < 2)
+                    if (parts.size() < 3)
                         builder.setFooter(parts.get(1));
                     else if (parts.get(2).equals("guildIcon"))
                         builder.setFooter(parts.get(1), message.getGuild().getIconUrl());
