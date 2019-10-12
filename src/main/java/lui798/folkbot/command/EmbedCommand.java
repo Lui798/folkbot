@@ -7,6 +7,7 @@ import net.dv8tion.jda.api.entities.Message;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -66,6 +67,12 @@ public class EmbedCommand extends Command {
                     break;
                 case "setImage":
                     builder.setImage(parts.get(1));
+                    break;
+                case "setDescription":
+                    builder.setDescription(parts.get(1));
+                    break;
+                case "setTimestamp":
+                    builder.setTimestamp(OffsetDateTime.now());
                     break;
             }
         }
