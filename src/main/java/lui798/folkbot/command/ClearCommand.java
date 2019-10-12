@@ -2,9 +2,9 @@ package lui798.folkbot.command;
 
 import lui798.folkbot.Bot;
 import lui798.folkbot.command.util.CommandResult;
-import net.dv8tion.jda.core.Permission;
-import net.dv8tion.jda.core.entities.Message;
-import net.dv8tion.jda.core.entities.TextChannel;
+import net.dv8tion.jda.api.Permission;
+import net.dv8tion.jda.api.entities.Message;
+import net.dv8tion.jda.api.entities.TextChannel;
 
 import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
@@ -46,7 +46,7 @@ public class ClearCommand extends Command {
 
         message.delete().complete();
         List<Message> messages = channel.getHistory().retrievePast(n).complete();
-        messages.removeIf(m -> m.getCreationTime().isBefore(twoWeeksAgo));
+        messages.removeIf(m -> m.getTimeCreated().isBefore(twoWeeksAgo));
 
         if (messages.isEmpty())
             return null;

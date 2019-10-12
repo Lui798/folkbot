@@ -2,7 +2,7 @@ package lui798.folkbot.command.player;
 
 import lui798.folkbot.command.util.CommandResult;
 import lui798.folkbot.player.PlayerController;
-import net.dv8tion.jda.core.entities.Message;
+import net.dv8tion.jda.api.entities.Message;
 
 import java.util.List;
 

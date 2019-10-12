@@ -1,8 +1,8 @@
 package lui798.folkbot.command;
 
 import lui798.folkbot.command.util.CommandResult;
-import net.dv8tion.jda.core.entities.Message;
-import net.dv8tion.jda.core.entities.TextChannel;
+import net.dv8tion.jda.api.entities.Message;
+import net.dv8tion.jda.api.entities.TextChannel;
 
 import java.util.List;
 

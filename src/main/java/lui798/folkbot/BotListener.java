@@ -4,13 +4,13 @@ import lui798.folkbot.command.util.CommandResult;
 import lui798.folkbot.command.util.CommandRunner2;
 import lui798.folkbot.player.AudioPlayerMain;
 import lui798.folkbot.util.Config;
-import net.dv8tion.jda.core.EmbedBuilder;
-import net.dv8tion.jda.core.Permission;
-import net.dv8tion.jda.core.entities.*;
-import net.dv8tion.jda.core.events.guild.member.GuildMemberJoinEvent;
-import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
-import net.dv8tion.jda.core.events.message.react.MessageReactionAddEvent;
-import net.dv8tion.jda.core.hooks.ListenerAdapter;
+import net.dv8tion.jda.api.EmbedBuilder;
+import net.dv8tion.jda.api.Permission;
+import net.dv8tion.jda.api.entities.*;
+import net.dv8tion.jda.api.events.guild.member.GuildMemberJoinEvent;
+import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
+import net.dv8tion.jda.api.events.message.react.MessageReactionAddEvent;
+import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -157,7 +157,9 @@ public class BotListener extends ListenerAdapter {
                     roles.add(guild.getRolesByName(s, false).get(0));
                 }
 
-                guild.getController().addRolesToMember(event.getMember(), roles).queue();
+                for (Role r : roles) {
+                    guild.addRoleToMember(event.getMember(), r).queue();
+                }
                 System.out.println("Assigned roles to new member " + event.getMember().getEffectiveName() + " in Guild " + event.getGuild().getName());
             }
         }

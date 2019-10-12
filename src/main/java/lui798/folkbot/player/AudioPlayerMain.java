@@ -7,10 +7,8 @@ import com.sedmelluq.discord.lavaplayer.tools.FriendlyException;
 import com.sedmelluq.discord.lavaplayer.track.AudioPlaylist;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrackInfo;
-import lui798.folkbot.Bot;
 import lui798.folkbot.command.util.CommandResult;
 import lui798.folkbot.util.YouTubeHelper;
-import net.dv8tion.jda.core.entities.MessageEmbed;
 
 public class AudioPlayerMain {
 

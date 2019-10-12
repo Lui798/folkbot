@@ -2,8 +2,8 @@ package lui798.folkbot;
 
 import lui798.folkbot.util.Config;
 import lui798.folkbot.util.DependencyFile;
-import net.dv8tion.jda.core.*;
-import net.dv8tion.jda.core.entities.*;
+import net.dv8tion.jda.api.*;
+import net.dv8tion.jda.api.entities.*;
 
 import javax.security.auth.login.LoginException;
 import java.io.File;

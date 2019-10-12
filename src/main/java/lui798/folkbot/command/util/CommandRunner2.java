@@ -3,8 +3,8 @@ package lui798.folkbot.command.util;
 import lui798.folkbot.command.*;
 import lui798.folkbot.command.player.*;
 import lui798.folkbot.player.PlayerController;
-import net.dv8tion.jda.core.entities.Guild;
-import net.dv8tion.jda.core.entities.Message;
+import net.dv8tion.jda.api.entities.Guild;
+import net.dv8tion.jda.api.entities.Message;
 
 import java.util.ArrayList;
 import java.util.Arrays;

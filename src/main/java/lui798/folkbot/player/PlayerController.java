@@ -1,8 +1,8 @@
 package lui798.folkbot.player;
 
-import net.dv8tion.jda.core.entities.Guild;
-import net.dv8tion.jda.core.entities.Message;
-import net.dv8tion.jda.core.managers.AudioManager;
+import net.dv8tion.jda.api.entities.Guild;
+import net.dv8tion.jda.api.entities.Message;
+import net.dv8tion.jda.api.managers.AudioManager;
 
 public class PlayerController {
     private AudioManager manager;
