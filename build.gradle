@@ -1,6 +1,7 @@
 plugins {
     id 'java'
     id "com.github.johnrengelman.shadow" version "4.0.2"
+    id 'maven'
 }
 
 group 'lui798'
